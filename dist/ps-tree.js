@@ -13,6 +13,7 @@
     hasownprop = Object.prototype.hasOwnProperty,
     treemenu = createElement("div", "tree-menu2"),
     paddingLeft = 20,
+    marginLeft = 20,
     _glyphicon = "glyphicon glyphicon-",
     _defaultIcon = "asterisk",
     _iconFold = "menu-left",
@@ -187,8 +188,10 @@
       var fn = this.events[eventName];
       isFunc(fn) && fn(event);
     }
-    function createRow(){
-      return createElement("div", "tree-wrap");
+    function createRow(dept){
+      return createElement("div", "tree-wrap", this.showline ? {
+        "margin-left" : marginLeft * dept + "px"
+      } : {});
     }
     function createText(text){
       var span = createElement("span");
@@ -209,35 +212,33 @@
       return span;
     }
     function createInner(icon, name, url, dept, row, node, hasChild){
-      var foldToggle,
-        cls = ( dept == 0 && hasChild ) ? "depth-" + dept + " open" : "depth-" + dept,
-        div = createElement("div", "tree-element " + cls, {
-          "padding-left" : paddingLeft * dept + "px"
-        }),
-        icon = createIcon(icon, "menu-before"),
-        text = createText(name),
-        foldIcon = createIcon(_iconUnFold, "menu-addon");
-      if(hasChild){
-        appendChildren.call(div, foldIcon);
-        /**
-        foldToggle = function(){
-          if(foldIcon.hasClass(_glyphicon + _iconUnFold)){
-            foldIcon.removeClass(_glyphicon + _iconUnFold)
-            foldIcon.addClass(_glyphicon + _iconFold);
-            div.removeClass("open")
-          } else {
-            foldIcon.removeClass(_glyphicon + _iconFold)
-            foldIcon.addClass(_glyphicon + _iconUnFold);
-            div.addClass("open")
-          }
-        }*/
+      if(typeof icon === "object"){
+        hasChild = row;
+        node = dept
+        dept = name;
+        row = url;
       }
-      appendChildren.call(div, icon, text);
+      var cls = ( dept == 0 && hasChild ) ? "depth-" + dept + " open" : "depth-" + dept,
+        div = createElement("div", "tree-element " + cls, this.showline ? {} : {
+        "padding-left" : paddingLeft * dept + "px"
+      });
+      if(typeof icon === "object"){
+        appendChildren.call(div, icon);
+      } else {
+        var foldToggle,
+          icon = createIcon(icon, "menu-before"),
+          text = createText(name),
+          foldIcon = createIcon(_iconUnFold, "menu-addon");
+        if(hasChild){
+          appendChildren.call(div, foldIcon);
+        }
+        appendChildren.call(div, icon, text);
+      }
       div.onclick = function(e){
         var allowDefaultBehavior = true;
         var event = {
           node : node,
-          stopPropagation : e.stopPropagation,
+          createElement : createElement,
           preventDefault : function(){
             allowDefaultBehavior = false;
           }
@@ -250,22 +251,23 @@
       };
       return div;
     }
-    function createItem(icon, name, url, dept, row, node, hasChild){
-      var div = createElement("div", "tree-item");
-      div.append(createInner(icon, name, url, dept, row, node, hasChild));
+    function createItem(isLast){
+      var div = createElement("div", isLast ? "tree-item last" : "tree-item");
       return div;
     }
     function traverse(data, dept){
       var i, icon, name, url, children, repeat,
-        row = createRow(),
+        row = bind(this, createRow)(dept),
         nodeList = [];
       each(data, bind(this, function(dt, i, source){
-        var itemDom, inner, replaceNode, event = {
+        var itemDom, itemWrap, inner, replaceNode, event = {
+            createElement : createElement,
             render : function(node){
               replaceNode = node;
             }
           },
           newNode = new Node();
+        extend(newNode, dt);
         if(isArray(dt)){
           if(isArray(dt[2])){
             icon = dt[0];
@@ -291,7 +293,8 @@
         inner = bind(self, traverse)(children, dept + 1);
         inner.nodeList.length && (newNode.children = inner.nodeList);
         this.emit("init", event);
-        itemDom = replaceNode || createItem(icon, name, url, dept, inner.dom, newNode, !!children.length);
+        itemDom = createItem(i === data.length - 1);
+        itemDom.append(replaceNode ? bind(this, createInner)(replaceNode, dept, inner.dom, newNode, !!children.length) : bind(this, createInner)(icon, name, url, dept, inner.dom, newNode, !!children.length));
         itemDom.append(inner.dom);
         each(inner.nodeList, function(node){
           node.parent = newNode;
@@ -317,7 +320,7 @@
   function clearAll(){
     removeAllChildren(treemenu);
   }
-  function destroyed(){
+  function destroy(){
 
   }
   function on(eventname, callback){
@@ -344,6 +347,7 @@
   }
   psTree.init = function(dom, config){
     this.dom = dom;
+    this.showline = config.showline;
     this.events = {};
     if(isArray(config)){
       this.option = config
@@ -359,7 +363,8 @@
   extend(psTree.init.prototype, {
     on : on,
     emit : emit,
-    setOption : setOption
+    setOption : setOption,
+    destroy : destroy
   })
   return psTree;
 });
