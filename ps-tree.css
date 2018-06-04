@@ -1,0 +1,44 @@
+.tree-menu2 {
+    width: 100%;
+}
+.tree-menu2 .tree-wrap.hide{
+    display : none;
+}
+.tree-menu2 .tree-element{
+    color : #fff;
+    line-height : 40px;
+    background-color : #50575b;
+    cursor : pointer;
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -khtml-user-select: none; /* Konqueror */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+not supported by any browser */
+}
+.tree-menu2 .tree-element.depth-1{
+    background-color : #747d85;
+}
+.tree-menu2 .tree-element.depth-2{
+    background-color : #747d85;
+}
+.tree-menu2 .tree-element.depth-0.open{
+    background-color : #5d6973;
+}
+.tree-menu2 .tree-element.depth-1:hover{
+    background-color : #9aa4ac
+}
+.tree-menu2 .tree-element.depth-2:hover{
+    background-color : #9aa4ac
+}
+.tree-menu2 .tree-element.depth-0:hover{
+    background-color : #5d6973
+}
+.tree-menu2 .tree-element .menu-addon{
+    float : right;
+    line-height : 40px;
+    padding-right : 10px;
+}
+.tree-menu2 .tree-element .menu-before{
+    padding : 0px 8px;
+}
