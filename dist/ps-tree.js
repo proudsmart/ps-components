@@ -130,6 +130,7 @@
   }
   function pushBack(a, b){
     push.apply(a, b);
+    return a.length;
   }
   function pushDiff(a, b){
     var i = 0;
@@ -342,10 +343,12 @@
           children = dt[traverseKey] || [];
         }
         inner = bind(self, traverse)(children, dept + 1, newNode);
+        newNode.depth = dept;
         newNode.children  = inner.nodeList.length && inner.nodeList;
         initEvent = new events();
         initEvent.node = newNode;
         this.emit("init", initEvent);
+        newNode.root = self;
         newNode.placeholder = placeholder;
         newNode.foldplaceholder = foldplaceholder;
         newNode.item = itemDom = createItem();
@@ -354,7 +357,7 @@
         newNode.icon = icon && createIcon(icon, "menu-before");
         newNode.text = createText(name);
         newNode.foldIcon = createIcon(null, "menu-addon ps");
-        children.length && innerDom.appendChild(newNode.foldIcon);
+        innerDom.appendChild(newNode.foldIcon);
         newNode.icon && innerDom.appendChild(newNode.icon);
         newNode.text && innerDom.appendChild(newNode.text);
         newNode.custom && innerDom.appendChild(newNode.custom);
@@ -375,7 +378,9 @@
           this.emit("click", clickEvent);
           if(clickEvent.allowDefaultBehavior){
             currentHighlight && removeClass(currentHighlight, "high-light");
-            currentHighlight !== newNode.inner ? addClass(newNode.inner, "high-light") : removeClass(newNode.inner, "high-light");
+            currentHighlight !== newNode.inner ?
+              addClass(newNode.inner, "high-light") :
+              removeClass(newNode.inner, "high-light");
             currentHighlight = newNode.inner;
           }
         });
@@ -383,7 +388,7 @@
           node.parent = newNode;
           node.update();
         });
-        row.append(newNode.item);
+        row.appendChild(newNode.item);
         push.call(this, newNode);
         nodeList.push(newNode);
       }));
@@ -397,7 +402,6 @@
       update : function(children){
         bind(this, checkNodeVisibility)();
         bind(this, updateItem)();
-        bind(this, updateInner)();
         bind(this, updateText)();
         bind(this, updateInner)();
         bind(this, updateFolder)();
@@ -450,7 +454,20 @@
       },
       append : function(d){
         var brothers = (this.parent ? this.parent.children : self.nodeList),
-          i = brothers.indexOf(this);
+          i = brothers.indexOf(this), row;
+        d = isArray(d) ? d : [d], length;
+        this.children = isArray(this.children) ? this.children : [];
+        row = bind(self, traverse)(d, this.depth + 1);
+        length = pushBack(this.children, row.nodeList);
+        each(row.dom.children, bind(this, function(n){
+          this.fold.append(n);
+        }));
+        each(row.nodeList, bind(this, function(n){
+          n.parent = this;
+          n.update();
+        }));
+        length > 1 && this.children[length - 2].update();
+        this.update();
       },
       remove : function(){
         var brothers = (this.parent ? this.parent.children : self.nodeList),
@@ -477,10 +494,27 @@
         splice.call(self, i, 1);
       },
       getChildren : function(){
-
+        var rs = [];
+        function traverse(children){
+          each(children, function(n, i){
+            rs.push(n);
+            n.children && traverse(n.children)
+          })
+        }
+        traverse(this.children);
+        return rs;
       },
       getParents : function(){
-
+        var rs = [], parent = this.parent;
+        while(parent){
+          rs.push(parent);
+          if(parent.parent){
+            parent = parent.parent;
+          } else {
+            break;
+          }
+        }
+        return rs;
       }
     });
     treeData = bind(self, traverse)(data, 0);
