@@ -9,12 +9,13 @@
 })(this, function(){
   var push = Array.prototype.push,
     slice = Array.prototype.slice,
+    indexOf = Array.prototype.indexOf,
+    splice = Array.prototype.splice,
     tostring = Object.prototype.toString,
     hasownprop = Object.prototype.hasOwnProperty,
     treemenu = createElement("div", "tree-menu2"),
     paddingLeft = 20,
     marginLeft = 20,
-
     _glyphicon = "glyphicon glyphicon-",
     _defaultIcon = "asterisk",
     _iconFold = "menu-left",
@@ -66,6 +67,16 @@
       }
     }
     return rs;
+  }
+  function some(arr, callback){
+    var i, rs = [];
+    arr = arr || [];
+    for(var i = 0; i < arr.length; i++){
+      if(callback(arr[i], i)){
+        return true;
+      }
+    }
+    return false;
   }
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
@@ -120,11 +131,22 @@
   function pushBack(a, b){
     push.apply(a, b);
   }
+  function pushDiff(a, b){
+    var i = 0;
+    a = a || [];
+    b = b || [];
+    for(; i < b.length; i++){
+      if(a.indexOf(b[i]) === -1){
+        a.push(b[i])
+      }
+    }
+    return a.length;
+  }
   function addClass(elem, cls){
     var oldcls = elem.getAttribute("class"),
       oldClsList = isString(oldcls) ? oldcls.split(" ") : [];
     clsList = cls.split(" ");
-    pushBack(oldClsList, clsList);
+    pushDiff(oldClsList, clsList);
     elem.setAttribute("class", oldClsList.join(" "));
   }
   function setClass(elem, cs){
@@ -159,42 +181,21 @@
     var element = document.createComment(text);
     return element;
   }
-  function each(arr, callback){
-    var i;
-    for(i = 0; i < arr.length; i++){
-      callback && callback(arr[i], i, arr);
-    }
-  }
   function hasProp(obj, attr){
     return hasownprop.call(obj, attr);
   }
-  function eachProp(obj, callback){
-    var i;
-    for(i in obj){
-      hasProp(obj, i) && callback(obj[i], i)
-    }
-  }
-  function isFunc(fn){
-    return tostring.call(fn) === "[object Function]";
-  }
-  function isArray(arr){
-    return tostring.call(arr) === "[object Array]";
-  }
-  function extend(a, b){
-    eachProp(b, function(element, attr){
-      a[attr] = element;
-    })
-  }
   function createTree(data){
-    var self = this;
-    var context = {}, Node, traverseKey = "children",
+    var self = this,
+      context = {},
+      Node, treeData,
+      traverseKey = "children",
       _fa = "fa", currentHighlight;
     function on(eventName, handler){
       this.events[eventName] = handler;
     };
     function emit(eventName, event){
       var fn = this.events[eventName];
-      isFunc(fn) && fn(event);
+      isFunc(fn) && fn.call(event.node, event);
     }
     function createRow(dept){
       return createElement("div", "tree-wrap", {
@@ -202,43 +203,82 @@
       });
     }
     function createText(text){
-      var span = createElement("span");
+      var span = createElement("span", "title");
       span.innerText = text;
       return span;
     }
+    function updateText(){
+      this.text.innerText = this.label;
+    }
     function createIcon(icon, cls){
-      icon = icon || _fa + ".circle";
-      var arr = icon.split(".");
-      if(arr.length > 1){
-        lib = arr[0] + " " + arr[0] + "-";
-        icon = arr[1];
-      } else {
-        lib = _glyphicon;
-        icon = arr[0]
-      }
-      var span = createElement("span", toGlyphicon(icon, lib) + " " + cls);
+      icon = icon || "";
+      cls = " " + cls || ""
+      var span = createElement("span", icon + cls);
       return span;
     }
-    function createInner(dept, hasChild){
-      var cls = ( dept == 0 && hasChild ) ? "depth-" + dept + " open" : "depth-" + dept,
-        div = createElement("div", "tree-element " + cls + (hasChild ? "" : " leaf-node"), {
+    function updateFolder(){
+      if(this.open == false){
+        removeClass(this.foldIcon, "ps-" + _iconUnFold)
+        addClass(this.foldIcon, "ps-" + _iconFold);
+        var parent = this.fold.parentNode;
+        if(parent){
+          parent.insertBefore(this.foldplaceholder, this.fold);
+        };
+        this.fold.remove();
+      } else {
+        removeClass(this.foldIcon, "ps-" + _iconFold)
+        addClass(this.foldIcon, "ps-" + _iconUnFold);
+        var parent = this.foldplaceholder.parentNode;
+        if(parent){
+          parent.insertBefore(this.fold, this.foldplaceholder);
+        };
+        this.foldplaceholder.remove();
+      }
+    }
+    function createInner(dept){
+      var cls = "depth-" + dept,
+        div = createElement("div", "tree-element " + cls, {
           "margin-left" : -paddingLeft * dept + "px",
           "padding-left" : paddingLeft * dept + "px"
         });
       return div;
     }
-    function createItem(posi){
-      var div = createElement("div", "tree-item" + (posi.length ? " " + posi : ""));
+    function updateInner(){
+      var hasChildren = some(this.children, function(n){
+        return n.show !== false;
+      });
+      hasChildren ? bind(this, showfoldIcon)() : bind(this, hidefoldIcon)()
+      hasChildren ? removeClass(this.inner, "leaf-node") : addClass(this.inner, "leaf-node");
+    }
+    function createItem(){
+      var div = createElement("div", "tree-item");
       return div;
     }
-    function removeDom(){
-
+    function updateItem(){
+      var pos = "",
+        children = (this.parent ? this.parent.children : self.nodeList),
+        visiblechildren = filter(children, (bind, function(child){
+          return child.show != false;
+        })),
+        inx = visiblechildren.indexOf(this);
+      inx = inx == -1 ? null : inx;
+      this.parent && inx == 0 && (pos += "first");
+      (inx === visiblechildren.length - 1) && (pos += " last");
+      this.searched && (pos += " searched");
+      setClass(this.item, "tree-item " + pos);
     }
-    function addDom(){
-
+    function showfoldIcon(){
+      addCss(this.foldIcon, {
+        display : "inline"
+      });
     }
-    function setItemVisible(){
-      if(this.show == true){
+    function hidefoldIcon(){
+      addCss(this.foldIcon, {
+        display : "none"
+      });
+    }
+    function checkNodeVisibility(){
+      if(this.show !== false){
         var parent = this.placeholder.parentNode;
         if(parent){
           parent.insertBefore(this.item, this.placeholder);
@@ -252,30 +292,32 @@
         this.item.remove();
       }
     }
+    function contain(target, dom){
+      var parent = dom;
+      while(parent){
+        if(parent === target){
+          return true
+        }
+        parent = parent.parentNode;
+      }
+      return false;
+    }
     function traverse(data, dept){
-      var i, icon, name, url, children, repeat,
-        row = bind(this, createRow)(dept), foldIcon,
-        nodeList = [];
+      var i, icon, name, url, children, repeat, nodeList = [],
+        row = bind(this, createRow)(dept), foldIcon, visiblechildren;
       each(data, bind(this, function(dt, i, source){
-        var itemDom, innerDom, itemWrap, inner, pos = "", replaceNode, event = {
-            createElement : createElement,
-            render : function(node){
-              replaceNode = node;
-            }
-          },
-          placeholder = createComment("---- node removed! -----"),
-          newNode = new Node(),
-          foldToggle = function(){
-            if(hasClass(newNode.foldIcon, "ps-" + _iconUnFold)){
-              removeClass(newNode.foldIcon, "ps-" + _iconUnFold)
-              addClass(newNode.foldIcon, "ps-" + _iconFold);
-              removeClass(itemDom, "open")
-            } else {
-              removeClass(newNode.foldIcon, "ps-" + _iconFold)
-              addClass(newNode.foldIcon, "ps-" + _iconUnFold);
-              addClass(itemDom, "open");
-            }
+        var itemDom, innerDom, itemWrap, inner, pos = "", replaceNode, initEvent,
+          foldplaceholder = createComment("------ node folded! -----"),
+          placeholder = createComment("------ node removed! -----"),
+          newNode = new Node();
+        function events(){}
+        extend(events.prototype, {
+          replaceNode : null,
+          allowDefaultBehavior : true,
+          preventDefault : function(){
+            this.allowDefaultBehavior = false;
           }
+        });
         extend(newNode, dt);
         if(isArray(dt)){
           if(isArray(dt[2])){
@@ -299,54 +341,49 @@
           name = dt.label;
           children = dt[traverseKey] || [];
         }
-        function events(){}
-        extend(events.prototype, {
-          allowDefaultBehavior : true,
-          preventDefault : function(){
-            this.allowDefaultBehavior = false;
-          },
-          fold : foldToggle
-        })
-        inner = bind(self, traverse)(children, dept + 1);
-        inner.nodeList.length && (newNode.children = inner.nodeList);
-        this.emit("init", event);
-        dept && i == 0 && (pos += "first");
-        i === data.length - 1 && (pos += " last");
+        inner = bind(self, traverse)(children, dept + 1, newNode);
+        newNode.children  = inner.nodeList.length && inner.nodeList;
+        initEvent = new events();
+        initEvent.node = newNode;
+        this.emit("init", initEvent);
         newNode.placeholder = placeholder;
-        newNode.item = itemDom = createItem(pos);
-        newNode.inner = innerDom = bind(this, createInner)(dept, !!children.length);
+        newNode.foldplaceholder = foldplaceholder;
+        newNode.item = itemDom = createItem();
+        newNode.fold = inner.dom;
+        newNode.inner = innerDom = bind(this, createInner)(dept);
         newNode.icon = icon && createIcon(icon, "menu-before");
         newNode.text = createText(name);
-        newNode.foldIcon = createIcon("ps." + _iconUnFold, "menu-addon");
+        newNode.foldIcon = createIcon(null, "menu-addon ps");
         children.length && innerDom.appendChild(newNode.foldIcon);
         newNode.icon && innerDom.appendChild(newNode.icon);
-        replaceNode ? innerDom.appendChild(replaceNode) : innerDom.appendChild(newNode.text)
-        itemDom.appendChild(innerDom)
-        itemDom.appendChild(inner.dom);
+        newNode.text && innerDom.appendChild(newNode.text);
+        newNode.custom && innerDom.appendChild(newNode.custom);
+        newNode.item.appendChild(newNode.inner);
+        newNode.item.appendChild(inner.dom);
         newNode.foldIcon.onclick = bind(this, function(e){
           e.stopPropagation();
           var foldEvent = new events();
           foldEvent.node = newNode;
           this.emit("fold", foldEvent);
           if(foldEvent.allowDefaultBehavior){
-            hasClass(inner.dom, "hide") ? (removeClass(inner.dom, "hide")) : addClass(inner.dom, "hide");
-            foldToggle && foldToggle();
+            newNode.toggle();
           }
         });
         newNode.inner.onclick = bind(this, function(e){
           var clickEvent = new events();
           clickEvent.node = newNode;
-          this.emit("fold", clickEvent);
+          this.emit("click", clickEvent);
           if(clickEvent.allowDefaultBehavior){
             currentHighlight && removeClass(currentHighlight, "high-light");
             currentHighlight !== newNode.inner ? addClass(newNode.inner, "high-light") : removeClass(newNode.inner, "high-light");
             currentHighlight = newNode.inner;
           }
-        })
+        });
         each(inner.nodeList, function(node){
           node.parent = newNode;
+          node.update();
         });
-        row.append(itemDom);
+        row.append(newNode.item);
         push.call(this, newNode);
         nodeList.push(newNode);
       }));
@@ -356,38 +393,102 @@
       };
     }
     Node = function(){}
-    Node.prototype.update = function(){
-      this.show == false;
-      bind(this, setItemVisible)();
-      this.updateItem();
-      //updateIcon(this.icon);
-      //updateFoldIcon(this.fold);
-    }
-    Node.prototype.updateItem = function(){
-      var children = this.parent ? this.parent.children : self.nodeList,
-        visiblechildren = filter(children, (bind, function(child){
-          console.log(child.show);
-          return child.show != false;
-        })),
-        pos = "",
-        inx = visiblechildren.indexOf(this);
-      this.parent && inx == 0 && (pos += "first");
-      (inx === visiblechildren.length - 1) && (pos += " last");
-      this.searched && (pos += " searched");
-      console.log(inx, pos, visiblechildren, children);
-      setClass(this.item, "tree-item " + pos);
-    }
-    Node.prototype.getChildren = function(){
+    extend(Node.prototype, {
+      update : function(children){
+        bind(this, checkNodeVisibility)();
+        bind(this, updateItem)();
+        bind(this, updateInner)();
+        bind(this, updateText)();
+        bind(this, updateInner)();
+        bind(this, updateFolder)();
+      },
+      setTitle : function(text){
+        this.label = text;
+        bind(this, updateText)(text);
+      },
+      createGroup : function(id){
+        var group = createElement("span");
+        group.setAttribute("id", id);
+        return group;
+      },
+      createText : function(id, text, style){
+        var span = createElement("span");
+        span.setAttribute("id", id);
+        span.innerText = text;
+        addCss(span, style);
+        return span;
+      },
+      createButton : function(id, text, style, callback){
+        var button = createElement("button");
+        button.setAttribute("id", id);
+        button.innerText = text;
+        addCss(button, style);
+        button.onclick = bind(this, function(e){
+          e.stopPropagation();
+          bind(this, callback)(e);
+        });
+        return button;
+      },
+      getById : function(id){
+        function traverse(children){
+          for(var i in children){
+            if(children[i].getAttribute("id") == id){
+              return children[i];
+            } else {
+              traverse(children[i].children);
+            }
+          }
+        }
+        return traverse(this.custom.children)
+      },
+      render : function(node){
+        this.custom = node;
+      },
+      toggle : function(){
+        this.open = this.open === undefined ? false : !this.open;
+        bind(this, updateFolder)();
+      },
+      append : function(d){
+        var brothers = (this.parent ? this.parent.children : self.nodeList),
+          i = brothers.indexOf(this);
+      },
+      remove : function(){
+        var brothers = (this.parent ? this.parent.children : self.nodeList),
+          i = brothers.indexOf(this);
+        function traverse(children){
+          each(children, function(n, i){
+            n.destroy();
+            n.children && traverse(n.children)
+          })
+        }
+        traverse(this.children);
+        brothers.splice(i, 1);
+        each(brothers, function(n, i){
+          bind(n, updateItem)();
+        })
+        this.destroy();
+      },
+      destroy : function(){
+        var i = indexOf.call(self, this);
+        this.item.remove();
+        eachProp(this, bind(this, function(elem, attr){
+          delete this[attr]
+        }));
+        splice.call(self, i, 1);
+      },
+      getChildren : function(){
 
-    }
-    Node.prototype.getParents = function(){
+      },
+      getParents : function(){
 
-    }
-    Node.prototype.remove = function(){
-
-    }
-    extend(context, bind(self, traverse)(data, 0));
-    return context;
+      }
+    });
+    treeData = bind(self, traverse)(data, 0);
+    self.nodeList = treeData.nodeList;
+    each(treeData.nodeList, function(n){
+      n.update();
+    });
+    return treeData.dom
   }
   function clearAll(){
     removeAllChildren(treemenu);
@@ -409,7 +510,7 @@
   function emit(eventname, data){
     var  events = this.events[eventname];
     each(events, function(elem, i){
-      elem(data);
+      elem.call(data.node, data);
     })
   }
   function search(callback){
@@ -422,24 +523,23 @@
         return n.label.indexOf(callback) != -1;
       }, parent = n, find = searchFn(n);
       find && callback != "" && (n.searched = find);
-      find && console.log(find);
       if(n.show !== true ){
         while(find && parent){
-          console.log(parent.label);
           find && (parent.show = true);
           parent = parent.parent;
         }
       };
     }));
+    this.update();
+  }
+  function update(){
     this.each(function(n){
       n.update();
     });
   }
   function setOption(option){
     clearAll();
-    var tree = createTree.call(this, option);
-    this.nodeList = tree.nodeList;
-    treemenu.appendChild(tree.dom);
+    treemenu.appendChild(bind(this, createTree)(option));
   }
   psTree.init = function(dom, config){
     this.dom = dom;
@@ -462,6 +562,7 @@
     setOption : setOption,
     destroy : destroy,
     search : search,
+    update : update,
     each : function(callback){
       each(this, function(n){
         callback(n);

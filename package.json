@@ -18,5 +18,10 @@
   "bugs": {
     "url": "https://github.com/mayalust/ps-components/issues"
   },
-  "homepage": "https://github.com/mayalust/ps-components#readme"
+  "homepage": "https://github.com/mayalust/ps-components#readme",
+  "dependencies": {
+    "angular-animate": "^1.7.0",
+    "angularjs": "0.0.1",
+    "proudsmart-message-box": "^1.0.5"
+  }
 }
