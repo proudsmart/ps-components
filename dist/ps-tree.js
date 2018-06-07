@@ -676,6 +676,16 @@
       each(this, function(n, i){
         callback(n, i);
       })
+    },
+    find : function(callback){
+      return find(this, function(n, i){
+        return callback(n, i);
+      })
+    }
+    filter : function(callback){
+      return filter(this, function(n, i){
+        return callback(n, i);
+      })
     }
   })
   return psTree;
