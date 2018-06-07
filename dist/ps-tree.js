@@ -328,7 +328,7 @@
     }
     function traverse(data, dept){
       var i, icon, name, url, children, repeat, nodeList = [],
-        row = bind(this, createRow)(dept), foldIcon, visiblechildren;
+        row = bind(this, createRow)(dept), foldIcon, visiblechildren, emptyplaceholder;
       each(data, bind(this, function(dt, i, source){
         var itemDom, innerDom, itemWrap, inner, pos = "", replaceNode, initEvent,
           foldplaceholder = createComment("------ node folded! -----"),
@@ -365,6 +365,7 @@
           name = dt.label;
           children = dt[traverseKey] || [];
         }
+        emptyplaceholder = createElement("span", "placeholder");
         inner = bind(self, traverse)(children, dept + 1, newNode);
         newNode.depth = dept;
         newNode.children  = inner.nodeList.length && inner.nodeList;
@@ -381,6 +382,7 @@
         newNode.checkbox = createCheckBox();
         newNode.text = createText(name);
         newNode.foldIcon = createIcon(null, "menu-addon ps");
+        innerDom.appendChild(emptyplaceholder);
         innerDom.appendChild(newNode.foldIcon);
         innerDom.append(newNode.checkbox);
         newNode.icon && innerDom.appendChild(newNode.icon);
@@ -642,6 +644,8 @@
     this.dom = dom;
     this.events = {};
     this.length = 0;
+    this.themes = config.themes;
+    this.addtheme(this.themes);
     if(isArray(config)){
       this.option = config
     } else if(isObject(config)){
@@ -660,6 +664,15 @@
     destroy : destroy,
     search : search,
     update : update,
+    addtheme : function(theme){
+      addClass(this.dom, theme);
+    },
+    removetheme : function(theme){
+      removeClass(this.dom, theme);
+    },
+    settheme : function(theme){
+      setClass(this.dom, theme);
+    },
     each : function(callback){
       each(this, function(n, i){
         callback(n, i);

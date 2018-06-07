@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html
+    lang="en">
+<head>
+  <meta
+      charset="UTF-8">
+  <title>
+    Title</title>
+  <script src="dist/ps-tree.js"></script>
+  <link rel="stylesheet" type="text/css" href="dist/css/ps-tree-basic.css" />
+  <style>
+    body {
+      background-color : #eee;
+    }
+  </style>
+</head>
+<body>
+  <div style = "width : 600px; margin:auto;">
+    <div style="padding : 0 0 10px 0;">
+      <span>search: </span><input id="key" /><button id="search">submit</button>
+    </div>
+    <div style="padding : 0 0 10px 0;">
+      <input type="checkbox" id="hasLine"/><span>show line: </span>
+      <input type="checkbox" id="hasCheckbox"/><span>show checkbox: </span>
+      <input type="checkbox" id="pullright"/><span>handler pull right: </span>
+    </div>
+    <div id="ps-tree"></div>
+  </div>
+  <!--  -->
+  <script>
+    var dom = document.getElementById("ps-tree");
+    var btn = document.getElementById("search");
+    var input = document.getElementById("key");
+    var hasline = document.getElementById("hasLine");
+    var hasCheckbox = document.getElementById("hasCheckbox");
+    var pullright = document.getElementById("pullright");
+    hasline.setAttribute("checked", "checked");
+    hasCheckbox.setAttribute("checked", "checked");
+    var data = [{
+      label : "main1",
+      children : [{
+        label : "sub1",
+        children : [{
+          label : "subsub1"
+        }]
+      },{
+        label : "sub2"
+      }]
+    },{
+      label : "main2",
+      children : [{
+        label : "sub3"
+      },{
+        label : "sub4"
+      }]
+    }]
+    var tree = psTree(dom, {
+      showline : true,
+      data : data,
+      themes : "show-line show-checkbox",
+      on : {
+        init : function(event){
+          var cur = this;
+          var group = this.createGroup("group");
+          var text = this.createText("a", event.node.label, {
+            color : "#aaa"
+          });
+          var removeBtn = this.createButton("b", "remove", {
+            float : "right"
+          }, function(e){
+            this.remove();
+          });
+          var addBtn = this.createButton("c", "add", {
+            float : "right"
+          }, function(e){
+            this.append({
+              label : "sub000"
+            })
+          });
+          group.appendChild(text);
+          group.appendChild(removeBtn);
+          group.appendChild(addBtn);
+          this.render(group);
+        },
+        click : function(event){
+          console.log(this.getAllChecked());
+        }
+      }
+    });
+    pullright.onchange = function(e){
+      if(this.checked == true){
+        tree.addtheme("folder-pull-right");
+      } else {
+        tree.removetheme("folder-pull-right");
+      }
+    }
+    hasline.onchange = function(e){
+      if(this.checked == true){
+        tree.addtheme("show-line");
+      } else {
+        tree.removetheme("show-line");
+      }
+    }
+    hasCheckbox.onchange = function(e){
+      if(this.checked == true){
+        tree.addtheme("show-checkbox");
+      } else {
+        tree.removetheme("show-checkbox");
+      }
+    }
+    btn.onclick = function(e){
+      tree.search(input.value);
+    };
+  </script>
+</body>
+</html>
