@@ -18,8 +18,8 @@
     marginLeft = 20,
     _glyphicon = "glyphicon glyphicon-",
     _defaultIcon = "asterisk",
-    _iconFold = "menu-left",
-    _iconUnFold = "menu-down";
+    _iconFold = "fold",
+    _iconUnFold = "unfold";
   function isObject(obj){
     return tostring.call(obj) == "[object Object]";
   }

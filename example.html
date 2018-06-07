@@ -8,6 +8,7 @@
     Title</title>
   <script src="dist/ps-tree.js"></script>
   <link rel="stylesheet" type="text/css" href="dist/css/ps-tree-basic.css" />
+  <link rel="stylesheet" type="text/css" href="dist/css/themes/ps-tree-industry.css" />
   <style>
     body {
       background-color : #eee;
@@ -24,6 +25,13 @@
       <input type="checkbox" id="hasCheckbox"/><span>show checkbox: </span>
       <input type="checkbox" id="pullright"/><span>handler pull right: </span>
     </div>
+    <div style="padding : 0 0 10px 0;">
+      <span>theme select</span>
+      <select id="theme">
+        <option value="">basic</option>
+        <option value="steel-industry">steel industry</option>
+      </select>
+    </div>
     <div id="ps-tree"></div>
   </div>
   <!--  -->
@@ -34,32 +42,40 @@
     var hasline = document.getElementById("hasLine");
     var hasCheckbox = document.getElementById("hasCheckbox");
     var pullright = document.getElementById("pullright");
+    var theme = document.getElementById("theme");
+    var themeCache;
     hasline.setAttribute("checked", "checked");
-    hasCheckbox.setAttribute("checked", "checked");
+    pullright.setAttribute("checked", "checked");
     var data = [{
       label : "main1",
       children : [{
+        icon : "circle",
         label : "sub1",
         children : [{
+          icon : "circle",
           label : "subsub1"
         }]
       },{
+        icon : "circle",
         label : "sub2"
       }]
     },{
       label : "main2",
       children : [{
+        icon : "circle",
         label : "sub3"
       },{
+        icon : "circle",
         label : "sub4"
       }]
     }]
     var tree = psTree(dom, {
       showline : true,
       data : data,
-      themes : "show-line show-checkbox",
+      themes : "show-line folder-pull-right steel-industry",
       on : {
         init : function(event){
+          /**
           var cur = this;
           var group = this.createGroup("group");
           var text = this.createText("a", event.node.label, {
@@ -80,13 +96,19 @@
           group.appendChild(text);
           group.appendChild(removeBtn);
           group.appendChild(addBtn);
-          this.render(group);
+          this.render(group);*/
         },
         click : function(event){
-          console.log(this.getAllChecked());
+          if(this.children){
+            event.preventDefault();
+            this.toggle();
+          } else {
+            console.log(this);
+          };
         }
       }
     });
+    themeCache = theme.value = "steel-industry";
     pullright.onchange = function(e){
       if(this.checked == true){
         tree.addtheme("folder-pull-right");
@@ -108,8 +130,19 @@
         tree.removetheme("show-checkbox");
       }
     }
-    btn.onclick = function(e){
-      tree.search(input.value);
+    hasCheckbox.onchange = function(e){
+      if(this.checked == true){
+        tree.addtheme("show-checkbox");
+      } else {
+        tree.removetheme("show-checkbox");
+      }
+    }
+    theme.onchange = function(){
+      if(typeof themeCache == "string" && themeCache.length > 0){
+        tree.removetheme(themeCache);
+      };
+      tree.addtheme(this.value);
+      themeCache = this.value;
     };
   </script>
 </body>

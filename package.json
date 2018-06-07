@@ -1,0 +1,22 @@
+{
+  "name": "proudsmart-tree",
+  "version": "1.0.0",
+  "description": "proudsmart tree",
+  "main": "dist/ps-tree.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mayalust/ps-components.git"
+  },
+  "keywords": [
+    "tree"
+  ],
+  "author": "proudsmart",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mayalust/ps-components/issues"
+  },
+  "homepage": "https://github.com/mayalust/ps-components#readme"
+}
