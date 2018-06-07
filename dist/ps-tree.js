@@ -49,49 +49,52 @@
       return fn.apply(target, arguments);
     }
   }
-  function find(arr, callback){
-    var i;
-    arr = arr || [];
-    for(var i = 0; i < arr.length; i++){
-      if(callback(arr[i], i)){
-        return arr[i];
-      }
-    }
-  }
-  function filter(arr, callback){
-    var i, rs = [];
-    arr = arr || [];
-    for(var i = 0; i < arr.length; i++){
-      if(callback(arr[i], i)){
-        rs.push(arr[i]);
-      }
-    }
-    return rs;
-  }
-  function some(arr, callback){
-    var i, rs = [];
-    arr = arr || [];
-    for(var i = 0; i < arr.length; i++){
-      if(callback(arr[i], i)){
-        return true;
-      }
-    }
-    return false;
-  }
-  function clone(obj){
-    return JSON.parse(JSON.stringify(obj));
-  }
   function extend(a, b){
     for(var i in b){
       a[i] = b[i]
     }
   }
   function each(arr, callback){
-    var i;
+    var i, rs;
     arr = arr || [];
     for(i=0; i<arr.length; i++){
-      callback && callback(arr[i], i);
+      rs = isFunction(callback) ? callback(arr[i], i) : undefined;
+      if(rs !== undefined){
+        return rs;
+      }
     }
+  }
+  function find(arr, callback){
+    return each(arr, function(n, i){
+      if(callback(n, i)){
+        return n;
+      }
+    });
+  }
+  function filter(arr, callback){
+    var rs = [];
+    each(arr, function(n, i){
+      if(callback(n, i)){
+        rs.push(n);
+      }
+    });
+    return rs;
+  }
+  function some(arr, callback){
+    var rs = each(arr, function(n, i){
+      if(callback(n, i)){
+        return true;
+      }
+    })
+    return rs === undefined ? false : rs;
+  }
+  function every(arr, callback){
+    var rs = each(arr, function(n, i){
+      if(!callback(n, i)){
+        return false;
+      }
+    })
+    return rs === undefined ? true : rs;
   }
   function eachProp(obj, callback){
     var i;
@@ -100,9 +103,9 @@
       callback && callback(obj[i], i);
     }
   }
-  function psTree(dom, config){
-    return new psTree.init(dom, config);
-  };
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
   function removeAllChildren(dom){
     each(dom.children, function(elem, i){
       elem.remove();
@@ -217,6 +220,22 @@
       var span = createElement("span", icon + cls);
       return span;
     }
+    function updateCheckBoxCls(){
+      this.checked == true ? addClass(this.checkbox, "checked") : removeClass(this.checkbox, "checked")
+    }
+    function updateCheckbox(){
+      this.eachChild(bind(this, function(n){
+        n.checked = this.checked;
+        bind(n, updateCheckBoxCls)();
+      }));
+      this.eachParent(bind(this, function(n){
+        !this.checked || every(n.children, function(n){
+          return n.checked == true;
+        }) ? n.checked = this.checked : null;
+        bind(n, updateCheckBoxCls)();
+      }))
+      bind(this, updateCheckBoxCls)();
+    }
     function updateFolder(){
       if(this.open == false){
         removeClass(this.foldIcon, "ps-" + _iconUnFold)
@@ -267,6 +286,10 @@
       (inx === visiblechildren.length - 1) && (pos += " last");
       this.searched && (pos += " searched");
       setClass(this.item, "tree-item " + pos);
+    }
+    function createCheckBox(){
+      var checkbox = createElement("span", "checkbox");
+      return checkbox;
     }
     function showfoldIcon(){
       addCss(this.foldIcon, {
@@ -355,9 +378,11 @@
         newNode.fold = inner.dom;
         newNode.inner = innerDom = bind(this, createInner)(dept);
         newNode.icon = icon && createIcon(icon, "menu-before");
+        newNode.checkbox = createCheckBox();
         newNode.text = createText(name);
         newNode.foldIcon = createIcon(null, "menu-addon ps");
         innerDom.appendChild(newNode.foldIcon);
+        innerDom.append(newNode.checkbox);
         newNode.icon && innerDom.appendChild(newNode.icon);
         newNode.text && innerDom.appendChild(newNode.text);
         newNode.custom && innerDom.appendChild(newNode.custom);
@@ -372,6 +397,15 @@
             newNode.toggle();
           }
         });
+        newNode.checkbox.onclick = bind(this, function(e){
+          e.stopPropagation();
+          var checkboxEvent = new events();
+          checkboxEvent.node = newNode;
+          this.emit("check", checkboxEvent);
+          if(checkboxEvent.allowDefaultBehavior){
+            newNode.check();
+          }
+        })
         newNode.inner.onclick = bind(this, function(e){
           var clickEvent = new events();
           clickEvent.node = newNode;
@@ -433,6 +467,15 @@
         });
         return button;
       },
+      getAllChecked : function(){
+        var rs = [];
+        each(self, function(n, i){
+          if(n.checked == true){
+            rs.push(n);
+          }
+        })
+        return rs;
+      },
       getById : function(id){
         function traverse(children){
           for(var i in children){
@@ -448,6 +491,10 @@
       render : function(node){
         this.custom = node;
       },
+      check : function(){
+        this.checked = !this.checked;
+        bind(this, updateCheckbox)();
+      },
       toggle : function(){
         this.open = this.open === undefined ? false : !this.open;
         bind(this, updateFolder)();
@@ -462,9 +509,10 @@
         each(row.dom.children, bind(this, function(n){
           this.fold.append(n);
         }));
-        each(row.nodeList, bind(this, function(n){
+        each(row.nodeList, bind(this, function(n, i){
           n.parent = this;
           n.update();
+          i == 0 && bind(n, updateCheckbox)();
         }));
         length > 1 && this.children[length - 2].update();
         this.update();
@@ -482,6 +530,7 @@
         brothers.splice(i, 1);
         each(brothers, function(n, i){
           bind(n, updateItem)();
+          i == 0 && bind(n, updateCheckbox)();
         })
         this.destroy();
       },
@@ -493,27 +542,38 @@
         }));
         splice.call(self, i, 1);
       },
-      getChildren : function(){
-        var rs = [];
+      eachChild : function(callback){
         function traverse(children){
           each(children, function(n, i){
-            rs.push(n);
+            callback(n, i);
             n.children && traverse(n.children)
           })
         }
         traverse(this.children);
-        return rs;
       },
-      getParents : function(){
-        var rs = [], parent = this.parent;
+      eachParent : function(callback){
+        var parent = this.parent, rs;
         while(parent){
-          rs.push(parent);
-          if(parent.parent){
+          rs = callback(parent, stop)
+          if(parent.parent && rs !== false){
             parent = parent.parent;
           } else {
             break;
           }
         }
+      },
+      getChildren : function(){
+        var rs = [];
+        this.eachChild(bind(this, function(n, i){
+          rs.push(n);
+        }));
+        return rs;
+      },
+      getParents : function(){
+        var rs = [], parent = this.parent;
+        this.eachParent(function(p){
+          rs.push(p);
+        });
         return rs;
       }
     });
@@ -575,6 +635,9 @@
     clearAll();
     treemenu.appendChild(bind(this, createTree)(option));
   }
+  function psTree(dom, config){
+    return new psTree.init(dom, config);
+  };
   psTree.init = function(dom, config){
     this.dom = dom;
     this.events = {};
@@ -598,8 +661,8 @@
     search : search,
     update : update,
     each : function(callback){
-      each(this, function(n){
-        callback(n);
+      each(this, function(n, i){
+        callback(n, i);
       })
     }
   })
