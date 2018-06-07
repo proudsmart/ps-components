@@ -24,6 +24,7 @@
       <input type="checkbox" id="hasLine"/><span>show line: </span>
       <input type="checkbox" id="hasCheckbox"/><span>show checkbox: </span>
       <input type="checkbox" id="pullright"/><span>handler pull right: </span>
+      <input type="checkbox" id="condense"/><span>condensed </span>
     </div>
     <div style="padding : 0 0 10px 0;">
       <span>theme select</span>
@@ -43,9 +44,11 @@
     var hasCheckbox = document.getElementById("hasCheckbox");
     var pullright = document.getElementById("pullright");
     var theme = document.getElementById("theme");
+    var condense = document.getElementById("condense");
     var themeCache;
     hasline.setAttribute("checked", "checked");
     pullright.setAttribute("checked", "checked");
+    condense.setAttribute("checked", "checked");
     var data = [{
       label : "main1",
       children : [{
@@ -72,7 +75,7 @@
     var tree = psTree(dom, {
       showline : true,
       data : data,
-      themes : "show-line folder-pull-right steel-industry",
+      themes : "show-line folder-pull-right steel-industry condense",
       on : {
         init : function(event){
           /**
@@ -130,11 +133,11 @@
         tree.removetheme("show-checkbox");
       }
     }
-    hasCheckbox.onchange = function(e){
+    condense.onchange = function(e){
       if(this.checked == true){
-        tree.addtheme("show-checkbox");
+        tree.addtheme("condense");
       } else {
-        tree.removetheme("show-checkbox");
+        tree.removetheme("condense");
       }
     }
     theme.onchange = function(){

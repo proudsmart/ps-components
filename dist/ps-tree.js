@@ -14,8 +14,6 @@
     tostring = Object.prototype.toString,
     hasownprop = Object.prototype.hasOwnProperty,
     treemenu = createElement("div", "tree-menu2"),
-    paddingLeft = 20,
-    marginLeft = 20,
     _glyphicon = "glyphicon glyphicon-",
     _defaultIcon = "asterisk",
     _iconFold = "fold",
@@ -203,7 +201,7 @@
     }
     function createRow(dept){
       return createElement("div", "tree-wrap", {
-        "margin-left" : (dept ? marginLeft : 0) + "px"
+        "margin-left" : (dept ? self.padding : 0) + "px"
       });
     }
     function createText(text){
@@ -258,8 +256,8 @@
     function createInner(dept){
       var cls = "depth-" + dept,
         div = createElement("div", "tree-element " + cls, {
-          "margin-left" : -paddingLeft * dept + "px",
-          "padding-left" : paddingLeft * dept + "px"
+          "margin-left" : -self.padding * dept + "px",
+          "padding-left" : self.padding * dept + "px"
         });
       return div;
     }
@@ -652,6 +650,7 @@
       this.on(config.on);
       this.option = config.data;
     }
+    this.padding = hasClass(this.dom, "condense") ? 10 : 20;
     if(this.option){
       this.setOption(this.option);
     }
