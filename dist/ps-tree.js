@@ -286,7 +286,7 @@
                 "opacity" : 0
               },
               step : {
-                "max-height" : -maxlength / 40,
+                "max-height" : -maxlength / 10,
                 "opacity" : .3
               }
             }, bind(this, remove))
@@ -315,7 +315,7 @@
                 "opacity" : 1
               },
               step : {
-                "max-height" : maxlength / 40,
+                "max-height" : 10,
                 "opacity" : .03
               },
               unit : {
@@ -483,7 +483,7 @@
         newNode.foldIcon = createIcon(null, "menu-addon ps");
         innerDom.appendChild(emptyplaceholder);
         innerDom.appendChild(newNode.foldIcon);
-        innerDom.append(newNode.checkbox);
+        innerDom.appendChild(newNode.checkbox);
         innerDom.appendChild(newNode.iconDom);
         innerDom.appendChild(newNode.text);
         newNode.custom && innerDom.appendChild(newNode.custom);
@@ -515,11 +515,7 @@
           clickEvent.node = newNode;
           this.emit("click", clickEvent);
           if(clickEvent.allowDefaultBehavior){
-            currentHighlight && removeClass(currentHighlight, "high-light");
-            currentHighlight !== newNode.inner ?
-              addClass(newNode.inner, "high-light") :
-              removeClass(newNode.inner, "high-light");
-            currentHighlight = newNode.inner;
+            newNode.highlight();
           }
         });
         each(inner.nodeList, function(node){
@@ -544,6 +540,13 @@
         bind(this, updateInner)();
         bind(this, updateFolder)();
         bind(this, checkNodeVisibility)();
+      },
+      highlight : function(){
+        currentHighlight && removeClass(currentHighlight, "high-light");
+        currentHighlight !== this.inner ?
+          addClass(this.inner, "high-light") :
+          removeClass(this.inner, "high-light");
+        currentHighlight = this.inner;
       },
       setTitle : function(text){
         this.label = text;
