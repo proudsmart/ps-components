@@ -248,40 +248,51 @@
       }))
       bind(this, updateCheckBoxCls)();
     }
-    function updateFolder(){
+    function updateFolder(allowAnimate){
       var children = this.getChildren();
       var maxlength = children.length ? children.length * 40 : 0;
+      function remove(){
+        var parent = this.fold.parentNode;
+        addCss(this.fold, {
+          overflow : "visible"
+        });
+        if(parent){
+          parent.insertBefore(this.foldplaceholder, this.fold);
+        };
+        this.fold.remove();
+      }
+      function add(){
+        console.warn("finished!!");
+        addCss(this.fold, {
+          overflow : "visible"
+        })
+      }
       if(maxlength){
         if(this.open == false){
           removeClass(this.foldIcon, "ps-" + _iconUnFold)
           addClass(this.foldIcon, "ps-" + _iconFold);
-          addCss(this.fold, {
-            "max-height" : maxlength + "px",
-            overflow : "hidden"
-          })
-          animate(this.fold, {
-            from : {
-              "max-height" : maxlength,
-              "opacity" : 1
-            },
-            to : {
-              "max-height" : 0,
-              "opacity" : 0
-            },
-            step : {
-              "max-height" : -3,
-              "opacity" : .3
-            }
-          }, bind(this, function(e){
-            var parent = this.fold.parentNode;
+          if(self.animate && allowAnimate){
             addCss(this.fold, {
-              overflow : "visible"
+              "max-height" : maxlength + "px",
+              overflow : "hidden"
             });
-            if(parent){
-              parent.insertBefore(this.foldplaceholder, this.fold);
-            };
-            this.fold.remove();
-          }))
+            animate(this.fold, {
+              from : {
+                "max-height" : maxlength,
+                "opacity" : 1
+              },
+              to : {
+                "max-height" : 0,
+                "opacity" : 0
+              },
+              step : {
+                "max-height" : -maxlength / 40,
+                "opacity" : .3
+              }
+            }, bind(this, remove))
+          } else {
+            bind(this, remove)();
+          }
         } else {
           removeClass(this.foldIcon, "ps-" + _iconFold)
           addClass(this.foldIcon, "ps-" + _iconUnFold);
@@ -289,32 +300,31 @@
           if(parent){
             parent.insertBefore(this.fold, this.foldplaceholder);
           };
-          addCss(this.fold, {
-            "max-height" : "0px",
-            overflow : "hidden"
-          })
-          animate(this.fold, {
-            from : {
-              "max-height" : 0,
-              "opacity" : 0
-            },
-            to : {
-              "max-height" : maxlength,
-              "opacity" : 1
-            },
-            step : {
-              "max-height" : 5,
-              "opacity" : .03
-            },
-            unit : {
-              "max-height" : "px"
-            }
-          }, bind(this, function(e){
-            console.warn("finished!!");
+          if(self.animate && allowAnimate){
             addCss(this.fold, {
-              overflow : "visible"
+              "max-height" : "0px",
+              overflow : "hidden"
             })
-          }))
+            animate(this.fold, {
+              from : {
+                "max-height" : 0,
+                "opacity" : 0
+              },
+              to : {
+                "max-height" : maxlength,
+                "opacity" : 1
+              },
+              step : {
+                "max-height" : maxlength / 40,
+                "opacity" : .03
+              },
+              unit : {
+                "max-height" : "px"
+              }
+            }, bind(this, add))
+          } else {
+            bind(this, add)();
+          }
           this.foldplaceholder.remove();
         }
       }
@@ -595,7 +605,7 @@
       },
       toggle : function(){
         this.open = this.open === undefined ? false : !this.open;
-        bind(this, updateFolder)();
+        bind(this, updateFolder)(true);
       },
       append : function(d){
         var brothers = (this.parent ? this.parent.children : self.nodeList),
@@ -741,6 +751,7 @@
     this.events = {};
     this.length = 0;
     this.themes = config.themes;
+    this.animate = config.animate;
     this.addtheme(this.themes);
     if(isArray(config)){
       this.option = config
