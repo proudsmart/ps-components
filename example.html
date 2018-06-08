@@ -25,6 +25,7 @@
       <input type="checkbox" id="hasCheckbox"/><span>show checkbox: </span>
       <input type="checkbox" id="pullright"/><span>handler pull right: </span>
       <input type="checkbox" id="condense"/><span>condensed </span>
+      <input type="checkbox" id="animation"/><span>animation </span>
     </div>
     <div style="padding : 0 0 10px 0;">
       <span>theme select</span>
@@ -38,37 +39,34 @@
   <!--  -->
   <script>
     var dom = document.getElementById("ps-tree");
-    var btn = document.getElementById("search");
+    var search = document.getElementById("search");
     var input = document.getElementById("key");
     var hasline = document.getElementById("hasLine");
     var hasCheckbox = document.getElementById("hasCheckbox");
     var pullright = document.getElementById("pullright");
     var theme = document.getElementById("theme");
     var condense = document.getElementById("condense");
+    var animation = document.getElementById("animation");
     var themeCache;
     hasline.setAttribute("checked", "checked");
     pullright.setAttribute("checked", "checked");
     condense.setAttribute("checked", "checked");
+    animation.setAttribute("checked", "checked");
     var data = [{
       label : "main1",
       children : [{
-        icon : "circle",
         label : "sub1",
         children : [{
-          icon : "circle",
           label : "subsub1"
         }]
       },{
-        icon : "circle",
         label : "sub2"
       }]
     },{
       label : "main2",
       children : [{
-        icon : "circle",
         label : "sub3"
       },{
-        icon : "circle",
         label : "sub4"
       }]
     }]
@@ -78,6 +76,7 @@
       themes : "show-line folder-pull-right steel-industry condense",
       on : {
         init : function(event){
+          this.icon = "circle";
           /**
           var cur = this;
           var group = this.createGroup("group");
@@ -139,6 +138,12 @@
       } else {
         tree.removetheme("condense");
       }
+    }
+    search.onclick = function(e){
+      tree.search(input.value);
+    }
+    animation.onchange = function(e){
+      tree.setAnimate(this.checked);
     }
     theme.onchange = function(){
       if(typeof themeCache == "string" && themeCache.length > 0){

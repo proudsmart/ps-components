@@ -17,7 +17,8 @@
     _glyphicon = "glyphicon glyphicon-",
     _defaultIcon = "asterisk",
     _iconFold = "fold",
-    _iconUnFold = "unfold";
+    _iconUnFold = "unfold",
+    _unit = ['opacity'];
   function isObject(obj){
     return tostring.call(obj) == "[object Object]";
   }
@@ -95,11 +96,19 @@
     return rs === undefined ? true : rs;
   }
   function eachProp(obj, callback){
-    var i;
     obj = obj || {};
     for(var i in obj){
       callback && callback(obj[i], i);
     }
+  }
+  function everyProp(obj, callback){
+    obj = obj || {};
+    for(var i in obj){
+      if(!callback(obj[i], i)){
+        return false;
+      };
+    }
+    return true;
   }
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
@@ -126,7 +135,8 @@
   }
   function addCss(elem, css){
     css && eachProp(css, function(element, attr){
-      elem.style[attr] = element;
+      var nounit = _unit.indexOf(attr) != -1;
+      elem.style[attr] = (!nounit && isNumber(element)) ? element + "px" : element;
     });
   }
   function pushBack(a, b){
@@ -210,6 +220,7 @@
       return span;
     }
     function updateText(){
+      this.label ? removeClass(this.text, "hidden") : addClass(this.text, "hidden");
       this.text.innerText = this.label;
     }
     function createIcon(icon, cls){
@@ -217,6 +228,9 @@
       cls = " " + cls || ""
       var span = createElement("span", icon + cls);
       return span;
+    }
+    function updateIcon(){
+      setClass(this.iconDom, this.icon || "hidden");
     }
     function updateCheckBoxCls(){
       this.checked == true ? addClass(this.checkbox, "checked") : removeClass(this.checkbox, "checked")
@@ -235,22 +249,74 @@
       bind(this, updateCheckBoxCls)();
     }
     function updateFolder(){
-      if(this.open == false){
-        removeClass(this.foldIcon, "ps-" + _iconUnFold)
-        addClass(this.foldIcon, "ps-" + _iconFold);
-        var parent = this.fold.parentNode;
-        if(parent){
-          parent.insertBefore(this.foldplaceholder, this.fold);
-        };
-        this.fold.remove();
-      } else {
-        removeClass(this.foldIcon, "ps-" + _iconFold)
-        addClass(this.foldIcon, "ps-" + _iconUnFold);
-        var parent = this.foldplaceholder.parentNode;
-        if(parent){
-          parent.insertBefore(this.fold, this.foldplaceholder);
-        };
-        this.foldplaceholder.remove();
+      var children = this.getChildren();
+      var maxlength = children.length ? children.length * 40 : 0;
+      if(maxlength){
+        if(this.open == false){
+          removeClass(this.foldIcon, "ps-" + _iconUnFold)
+          addClass(this.foldIcon, "ps-" + _iconFold);
+          addCss(this.fold, {
+            "max-height" : maxlength + "px",
+            overflow : "hidden"
+          })
+          animate(this.fold, {
+            from : {
+              "max-height" : maxlength,
+              "opacity" : 1
+            },
+            to : {
+              "max-height" : 0,
+              "opacity" : 0
+            },
+            step : {
+              "max-height" : -3,
+              "opacity" : .3
+            }
+          }, bind(this, function(e){
+            var parent = this.fold.parentNode;
+            addCss(this.fold, {
+              overflow : "visible"
+            });
+            if(parent){
+              parent.insertBefore(this.foldplaceholder, this.fold);
+            };
+            this.fold.remove();
+          }))
+        } else {
+          removeClass(this.foldIcon, "ps-" + _iconFold)
+          addClass(this.foldIcon, "ps-" + _iconUnFold);
+          var parent = this.foldplaceholder.parentNode;
+          if(parent){
+            parent.insertBefore(this.fold, this.foldplaceholder);
+          };
+          addCss(this.fold, {
+            "max-height" : "0px",
+            overflow : "hidden"
+          })
+          animate(this.fold, {
+            from : {
+              "max-height" : 0,
+              "opacity" : 0
+            },
+            to : {
+              "max-height" : maxlength,
+              "opacity" : 1
+            },
+            step : {
+              "max-height" : 5,
+              "opacity" : .03
+            },
+            unit : {
+              "max-height" : "px"
+            }
+          }, bind(this, function(e){
+            console.warn("finished!!");
+            addCss(this.fold, {
+              overflow : "visible"
+            })
+          }))
+          this.foldplaceholder.remove();
+        }
       }
     }
     function createInner(dept){
@@ -298,6 +364,34 @@
       addCss(this.foldIcon, {
         display : "none"
       });
+    }
+    function animate(dom, config, callback){
+      var fromCss = config.from,
+        toCss = config.to,
+        step = config.step,
+        done = {}, h, t = 0;
+      if(self.animate !== false){
+        h = setInterval(function(){
+          eachProp(fromCss, function(n, i){
+            done[i] = done[i] || false;
+            !done[i] && (fromCss[i] += step[i] * t * .03);
+            if( (toCss[i] - fromCss[i]) *  step[i] < 0){
+              done[i] = true;
+              if(everyProp(done,function(n, i){
+                  return n;
+                })){
+                clearInterval(h);
+                callback();
+              }
+            };
+          });
+          addCss(dom, fromCss);
+          t++;
+        }, 5);
+      } else {
+        addCss(dom, toCss);
+        callback();
+      }
     }
     function checkNodeVisibility(){
       if(this.show !== false){
@@ -367,27 +461,27 @@
         inner = bind(self, traverse)(children, dept + 1, newNode);
         newNode.depth = dept;
         newNode.children  = inner.nodeList.length && inner.nodeList;
-        initEvent = new events();
-        initEvent.node = newNode;
-        this.emit("init", initEvent);
         newNode.root = self;
         newNode.placeholder = placeholder;
         newNode.foldplaceholder = foldplaceholder;
         newNode.item = itemDom = createItem();
         newNode.fold = inner.dom;
         newNode.inner = innerDom = bind(this, createInner)(dept);
-        newNode.icon = icon && createIcon(icon, "menu-before");
+        newNode.iconDom = createIcon(icon, "menu-before");
         newNode.checkbox = createCheckBox();
         newNode.text = createText(name);
         newNode.foldIcon = createIcon(null, "menu-addon ps");
         innerDom.appendChild(emptyplaceholder);
         innerDom.appendChild(newNode.foldIcon);
         innerDom.append(newNode.checkbox);
-        newNode.icon && innerDom.appendChild(newNode.icon);
-        newNode.text && innerDom.appendChild(newNode.text);
+        innerDom.appendChild(newNode.iconDom);
+        innerDom.appendChild(newNode.text);
         newNode.custom && innerDom.appendChild(newNode.custom);
         newNode.item.appendChild(newNode.inner);
         newNode.item.appendChild(inner.dom);
+        initEvent = new events();
+        initEvent.node = newNode;
+        this.emit("init", initEvent);
         newNode.foldIcon.onclick = bind(this, function(e){
           e.stopPropagation();
           var foldEvent = new events();
@@ -434,11 +528,12 @@
     Node = function(){}
     extend(Node.prototype, {
       update : function(children){
-        bind(this, checkNodeVisibility)();
+        bind(this, updateIcon)();
         bind(this, updateItem)();
         bind(this, updateText)();
         bind(this, updateInner)();
         bind(this, updateFolder)();
+        bind(this, checkNodeVisibility)();
       },
       setTitle : function(text){
         this.label = text;
@@ -487,6 +582,9 @@
           }
         }
         return traverse(this.custom.children)
+      },
+      setAnimate : function(bool){
+        self.animate = bool;
       },
       render : function(node){
         this.custom = node;
@@ -676,6 +774,9 @@
       each(this, function(n, i){
         callback(n, i);
       })
+    },
+    setAnimate : function(bool){
+      this.animate = bool;
     },
     find : function(callback){
       return find(this, function(n, i){
