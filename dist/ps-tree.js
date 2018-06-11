@@ -18,7 +18,8 @@
     _defaultIcon = "asterisk",
     _iconFold = "fold",
     _iconUnFold = "unfold",
-    _unit = ['opacity'];
+    _unit = ['opacity'],
+    _ver = "v1.0.16";
   function isObject(obj){
     return tostring.call(obj) == "[object Object]";
   }
@@ -251,6 +252,10 @@
     function updateFolder(allowAnimate){
       var children = this.getChildren();
       var maxlength = children.length ? children.length * 40 : 0;
+      this.open == true && (console.log(this.depth, this.label, maxlength));
+      if(this.label == "北京"){
+        debugger;
+      }
       function remove(){
         var parent = this.fold.parentNode;
         addCss(this.fold, {
@@ -262,9 +267,9 @@
         this.fold.remove();
       }
       function add(){
-        console.warn("finished!!");
         addCss(this.fold, {
-          overflow : "visible"
+          overflow : "visible",
+          "max-height" : "auto"
         })
       }
       if(maxlength){
@@ -769,6 +774,7 @@
     this.dom.appendChild(treemenu);
   }
   extend(psTree.init.prototype, {
+    version : _ver,
     on : on,
     emit : emit,
     setOption : setOption,

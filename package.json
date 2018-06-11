@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/mayalust/ps-components/issues"
   },
-  "homepage": "https://github.com/mayalust/ps-components#readme"
+  "homepage": "https://github.com/mayalust/ps-components#readme",
+  "dependencies": {
+    "npm": "^6.1.0"
+  }
 }
