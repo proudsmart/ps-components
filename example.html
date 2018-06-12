@@ -34,25 +34,10 @@
         <option value="steel-industry">steel industry</option>
       </select>
     </div>
-    <div id="ps-tree"></div>
+    <div id="ps-tree" style="max-height : 600px; overflow : auto;"></div>
   </div>
   <!--  -->
   <script>
-
-    var dom = document.getElementById("ps-tree");
-    var search = document.getElementById("search");
-    var input = document.getElementById("key");
-    var hasline = document.getElementById("hasLine");
-    var hasCheckbox = document.getElementById("hasCheckbox");
-    var pullright = document.getElementById("pullright");
-    var theme = document.getElementById("theme");
-    var condense = document.getElementById("condense");
-    var animation = document.getElementById("animation");
-    var themeCache;
-    hasline.setAttribute("checked", "checked");
-    pullright.setAttribute("checked", "checked");
-    condense.setAttribute("checked", "checked");
-    //animation.setAttribute("checked", "checked");
     var data = [
       {
         "label": "北京",
@@ -5402,6 +5387,20 @@
         ]
       }
     ]
+    var dom = document.getElementById("ps-tree");
+    var search = document.getElementById("search");
+    var input = document.getElementById("key");
+    var hasline = document.getElementById("hasLine");
+    var hasCheckbox = document.getElementById("hasCheckbox");
+    var pullright = document.getElementById("pullright");
+    var theme = document.getElementById("theme");
+    var condense = document.getElementById("condense");
+    var animation = document.getElementById("animation");
+    var themeCache;
+    hasline.setAttribute("checked", "checked");
+    pullright.setAttribute("checked", "checked");
+    hasCheckbox.setAttribute("checked", "checked");
+    //animation.setAttribute("checked", "checked");
     var tree = psTree(dom, {
       showline : true,
       animate : false,
@@ -5409,7 +5408,6 @@
       themes : "show-line folder-pull-right show-checkbox",
       on : {
         init : function(event){
-          //this.depth == 0 && console.log(this);
           this.open = false;
           this.icon = "circle";
           /**
@@ -5446,7 +5444,7 @@
       }
     });
     tree[0].highlight();
-    themeCache = theme.value = "steel-industry";
+    themeCache = theme.value = "";
     pullright.onchange = function(e){
       if(this.checked == true){
         tree.addtheme("folder-pull-right");

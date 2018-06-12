@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/mayalust/ps-components#readme",
   "dependencies": {
+    "angular": "^1.7.1",
     "npm": "^6.1.0"
   }
 }

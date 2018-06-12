@@ -253,9 +253,6 @@
       var children = this.getChildren();
       var maxlength = children.length ? children.length * 40 : 0;
       this.open == true && (console.log(this.depth, this.label, maxlength));
-      if(this.label == "北京"){
-        debugger;
-      }
       function remove(){
         var parent = this.fold.parentNode;
         addCss(this.fold, {
@@ -411,15 +408,11 @@
     function checkNodeVisibility(){
       if(this.show !== false){
         var parent = this.placeholder.parentNode;
-        if(parent){
-          parent.insertBefore(this.item, this.placeholder);
-        }
+        parent && parent.insertBefore(this.item, this.placeholder);
         this.placeholder.remove();
       } else {
         var parent = this.item.parentNode;
-        if(parent){
-          parent.insertBefore(this.placeholder, this.item);
-        }
+        parent && parent.insertBefore(this.placeholder, this.item);
         this.item.remove();
       }
     }
@@ -517,10 +510,15 @@
         })
         newNode.inner.onclick = bind(this, function(e){
           var clickEvent = new events();
+          e.stopPropagation();
           clickEvent.node = newNode;
           this.emit("click", clickEvent);
           if(clickEvent.allowDefaultBehavior){
-            newNode.highlight();
+            if(self.display !== "dropdown"){
+              newNode.highlight();
+            } else {
+              self.emit("dropdown:close", clickEvent);
+            }
           }
         });
         each(inner.nodeList, function(node){
@@ -758,8 +756,10 @@
     this.dom = dom;
     this.events = {};
     this.length = 0;
+    this.display = config.display || "normal";
     this.themes = config.themes;
     this.animate = config.animate;
+    this.value = config.value;
     this.addtheme(this.themes);
     if(isArray(config)){
       this.option = config
@@ -771,7 +771,28 @@
     if(this.option){
       this.setOption(this.option);
     }
-    this.dom.appendChild(treemenu);
+    if(this.display !== "dropdown"){
+      this.dom.appendChild(treemenu);
+    } else {
+      var dropdowninput = createElement("div", "input"),
+        selectwrap = createElement("div", "selectwrap");
+      dropdowninput.innerText = this.value || "请选择";
+      this.addtheme("dropdown");
+      this.dom.appendChild(dropdowninput);
+      this.dom.appendChild(selectwrap);
+      dropdowninput.onclick = function(){
+        hasClass(treemenu, "open") ? removeClass(treemenu, "open") : addClass(treemenu, "open");
+      }
+      this.on("dropdown:close", function(event){
+        removeClass(treemenu, "open");
+        var parents = event.node.getParents();
+        parents.reverse();
+        dropdowninput.innerText = parents.map(function(e){
+          return e.label
+        }).concat([event.node.label]).join(",");
+      });
+      selectwrap.appendChild(treemenu);
+    }
   }
   extend(psTree.init.prototype, {
     version : _ver,
