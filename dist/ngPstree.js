@@ -17,13 +17,12 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
       splice = Array.prototype.splice,
       tostring = Object.prototype.toString,
       hasownprop = Object.prototype.hasOwnProperty,
-      treemenu = createElement("div", "tree-menu2"),
       _glyphicon = "glyphicon glyphicon-",
       _defaultIcon = "asterisk",
       _iconFold = "fold",
       _iconUnFold = "unfold",
       _unit = ['opacity'],
-      _ver = "v1.0.16";
+      _ver = "v1.0.22";
     function isObject(obj){
       return tostring.call(obj) == "[object Object]";
     }
@@ -703,7 +702,7 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
       return treeData.dom
     }
     function clearAll(){
-      removeAllChildren(treemenu);
+      removeAllChildren(this.treemenu);
     }
     function destroy(){
 
@@ -750,8 +749,8 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
       });
     }
     function setOption(option){
-      clearAll();
-      treemenu.appendChild(bind(this, createTree)(option));
+      bind(this, clearAll)();
+      this.treemenu.appendChild(bind(this, createTree)(option));
     }
     function psTree(dom, config){
       return new psTree.init(dom, config);
@@ -760,6 +759,7 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
       this.dom = dom;
       this.events = {};
       this.length = 0;
+      this.treemenu = createElement("div", "tree-menu2");
       this.display = config.display || "normal";
       this.themes = config.themes;
       this.animate = config.animate;
@@ -776,26 +776,29 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
         this.setOption(this.option);
       }
       if(this.display !== "dropdown"){
-        this.dom.appendChild(treemenu);
+        this.dom.appendChild(this.treemenu);
       } else {
         var dropdowninput = createElement("div", "input"),
           selectwrap = createElement("div", "selectwrap");
+        selectwrap.setAttribute("id", parseInt(Math.random() * 100));
         dropdowninput.innerText = this.value || "请选择";
         this.addtheme("dropdown");
         this.dom.appendChild(dropdowninput);
         this.dom.appendChild(selectwrap);
-        dropdowninput.onclick = function(){
-          hasClass(treemenu, "open") ? removeClass(treemenu, "open") : addClass(treemenu, "open");
-        }
+        dropdowninput.onclick = bind(this, function(){
+          hasClass(this.treemenu, "open") ? removeClass(this.treemenu, "open") : addClass(this.treemenu, "open");
+        });
         this.on("dropdown:close", function(event){
-          removeClass(treemenu, "open");
+          removeClass(this.treemenu, "open");
           var parents = event.node.getParents();
           parents.reverse();
           dropdowninput.innerText = parents.map(function(e){
             return e.label
           }).concat([event.node.label]).join(",");
         });
-        selectwrap.appendChild(treemenu);
+
+        selectwrap.appendChild(this.treemenu);
+        console.log(selectwrap.getAttribute("id"));
       }
     }
     extend(psTree.init.prototype, {
