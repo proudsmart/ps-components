@@ -702,7 +702,13 @@
     removeAllChildren(treemenu);
   }
   function destroy(){
-
+    this.dom.innerHTML = "";
+    this.each(function(n){
+      n.destroy();
+    });
+    this.eachProp(bind(this, function(n, i){
+      delete this[i];
+    }));
   }
   function on(eventname, callback){
     if(isObject(eventname)){
@@ -813,6 +819,11 @@
     },
     each : function(callback){
       each(this, function(n, i){
+        callback(n, i);
+      })
+    },
+    eachProp : function(callback){
+      eachProp(this, function(n, i){
         callback(n, i);
       })
     },

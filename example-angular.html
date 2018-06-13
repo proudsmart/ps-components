@@ -36,7 +36,7 @@
         }
       }
     }
-    app.controller("test", function($scope, $http){
+    app.controller("test", function($scope, $http, $timeout){
       $http.get("china.json").then(function(d){
         $scope.select = "北京";
         var target = [];

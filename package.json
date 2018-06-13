@@ -1,6 +1,6 @@
 {
   "name": "proudsmart-tree",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "proudsmart tree",
   "main": "dist/ps-tree.js",
   "scripts": {
