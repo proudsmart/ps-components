@@ -19,7 +19,8 @@
     "url": "https://github.com/mayalust/ps-components/issues"
   },
   "homepage": "https://github.com/mayalust/ps-components#readme",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "angular": "^1.7.1",
     "npm": "^6.1.0"
   }
