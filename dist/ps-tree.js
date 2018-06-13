@@ -18,7 +18,7 @@
     _iconFold = "fold",
     _iconUnFold = "unfold",
     _unit = ['opacity'],
-    _ver = "v1.0.22";
+    _ver = "v1.0.23";
   function isObject(obj){
     return tostring.call(obj) == "[object Object]";
   }
@@ -755,7 +755,7 @@
     this.dom = dom;
     this.events = {};
     this.length = 0;
-    this.treemenu = createElement("div", "tree-menu2");
+    this.treemenu = createElement("div", "proud-smart-tree");
     this.display = config.display || "normal";
     this.themes = config.themes;
     this.animate = config.animate;
@@ -784,15 +784,14 @@
       dropdowninput.onclick = bind(this, function(){
         hasClass(this.treemenu, "open") ? removeClass(this.treemenu, "open") : addClass(this.treemenu, "open");
       });
-      this.on("dropdown:close", function(event){
+      this.on("dropdown:close", bind(this, function(event){
         removeClass(this.treemenu, "open");
         var parents = event.node.getParents();
         parents.reverse();
         dropdowninput.innerText = parents.map(function(e){
           return e.label
         }).concat([event.node.label]).join(",");
-      });
-
+      }));
       selectwrap.appendChild(this.treemenu);
       console.log(selectwrap.getAttribute("id"));
     }
