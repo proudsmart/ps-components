@@ -860,7 +860,15 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
                 this.open = false;
               },
               click : function(event){
-                scope.ngModel = this.getParents().map;
+                var parents = this.getParents();
+                parents.reverse();
+                parents = parents.map(function(n){
+                  return n.label;
+                });
+                parents.push(this.label);
+                scope.$apply(function(){
+                  scope.ngModel = parents.join(",");
+                });
               }
             }
           });
