@@ -782,7 +782,7 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
           selectwrap = createElement("div", "selectwrap");
         selectwrap.setAttribute("id", parseInt(Math.random() * 100));
         dropdowninput.innerText = this.value || "请选择";
-        this.addtheme("dropdown");
+        this.addtheme("ps-dropdown");
         this.dom.appendChild(dropdowninput);
         this.dom.appendChild(selectwrap);
         dropdowninput.onclick = bind(this, function(){
