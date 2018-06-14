@@ -577,7 +577,7 @@
         });
         return button;
       },
-      getAllChecked : function(){
+      getSelected : function(){
         var rs = [];
         each(self, function(n, i){
           if(n.checked == true){
@@ -830,6 +830,11 @@
       return filter(this, function(n, i){
         return callback(n, i);
       })
+    },
+    getSelected : function(){
+      return filter(this, bind(this, function(n){
+        return n.checked;
+      }))
     }
   })
   return psTree;
