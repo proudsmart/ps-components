@@ -25,7 +25,7 @@
     _iconFold = "fold",
     _iconUnFold = "unfold",
     _unit = ['opacity'],
-    _ver = "v1.0.29";
+    _ver = "v1.0.30";
   function isType(type){
     return function(obj){
       return tostring.call(obj) == "[object " + type + "]" && obj === obj;
