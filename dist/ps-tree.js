@@ -13,32 +13,23 @@
     splice = Array.prototype.splice,
     tostring = Object.prototype.toString,
     hasownprop = Object.prototype.hasOwnProperty,
+    isObject = isType("Object"),
+    isNull = isType("Null"),
+    isUndefined = isType("Undefined"),
+    isArray = isType("Array"),
+    isNumber = isType("Number"),
+    isFunction = isType("Function"),
+    isString = isType("String"),
     _glyphicon = "glyphicon glyphicon-",
     _defaultIcon = "asterisk",
     _iconFold = "fold",
     _iconUnFold = "unfold",
     _unit = ['opacity'],
-    _ver = "v1.0.23";
-  function isObject(obj){
-    return tostring.call(obj) == "[object Object]";
-  }
-  function isNull(obj){
-    return tostring.call(obj) == "[object Null]";
-  }
-  function isUndefined(obj){
-    return tostring.call(obj) == "[object Undefined]";
-  }
-  function isArray(obj){
-    return tostring.call(obj) == "[object Array]";
-  }
-  function isNumber(obj){
-    return tostring.call(obj) == "[object Number]" && obj === obj;
-  }
-  function isFunction(obj){
-    return tostring.call(obj) == "[object Function]";
-  }
-  function isString(obj){
-    return tostring.call(obj) == "[object String]";
+    _ver = "v1.0.29";
+  function isType(type){
+    return function(obj){
+      return tostring.call(obj) == "[object " + type + "]" && obj === obj;
+    }
   }
   function isNaN(num){
     return num !== num;
@@ -197,9 +188,9 @@
     return hasownprop.call(obj, attr);
   }
   function createTree(data){
-    var self = this,
+    var self = this, Node, treeData,
+      checkedNodes = [],
       context = {},
-      Node, treeData,
       traverseKey = "children",
       _fa = "fa", currentHighlight;
     function on(eventName, handler){
@@ -249,8 +240,8 @@
       bind(this, updateCheckBoxCls)();
     }
     function updateFolder(allowAnimate){
-      var children = this.getChildren();
-      var maxlength = children.length ? children.length * 40 : 0;
+      var children = this.getChildren(),
+        maxlength = children.length ? children.length * 40 : 0;
       this.open == true && (console.log(this.depth, this.label, maxlength));
       function remove(){
         var parent = this.fold.parentNode;
@@ -464,6 +455,11 @@
           name = dt.label;
           children = dt[traverseKey] || [];
         }
+        initEvent = new events();
+        initEvent.node = newNode;
+        this.emit("init", initEvent);
+        newNode.checked && checkedNodes.push(newNode);
+        push.call(this, newNode);
         emptyplaceholder = createElement("span", "placeholder");
         inner = bind(self, traverse)(children, dept + 1, newNode);
         newNode.depth = dept;
@@ -486,9 +482,6 @@
         newNode.custom && innerDom.appendChild(newNode.custom);
         newNode.item.appendChild(newNode.inner);
         newNode.item.appendChild(inner.dom);
-        initEvent = new events();
-        initEvent.node = newNode;
-        this.emit("init", initEvent);
         newNode.foldIcon.onclick = bind(this, function(e){
           e.stopPropagation();
           var foldEvent = new events();
@@ -525,7 +518,6 @@
           node.update();
         });
         row.appendChild(newNode.item);
-        push.call(this, newNode);
         nodeList.push(newNode);
       }));
       return {
@@ -541,6 +533,7 @@
         bind(this, updateText)();
         bind(this, updateInner)();
         bind(this, updateFolder)();
+        bind(this, updateCheckBoxCls)();
         bind(this, checkNodeVisibility)();
       },
       highlight : function(){
@@ -695,6 +688,9 @@
     each(treeData.nodeList, function(n){
       n.update();
     });
+    each(checkedNodes, function(n){
+      bind(n,updateCheckbox)();
+    });
     return treeData.dom
   }
   function clearAll(){
@@ -793,7 +789,6 @@
         }).concat([event.node.label]).join(",");
       }));
       selectwrap.appendChild(this.treemenu);
-      console.log(selectwrap.getAttribute("id"));
     }
   }
   extend(psTree.init.prototype, {

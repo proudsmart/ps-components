@@ -77,6 +77,7 @@
             children = find.children;
           } else {
             var newAddress = {
+              id : addressArr.slice(0,i + 1).toString(),
               label : name
             }
             i !== addressArr.length - 1 && (newAddress.children = []);
@@ -85,6 +86,8 @@
           }
         })
       });
+      var selected = ["北京,北京,东城区", "北京,北京,朝阳区"];
+      var checked = [];
       var tree = psTree(dom, {
         showline : true,
         animate : false,
@@ -92,26 +95,32 @@
         themes : "show-line folder-pull-right show-checkbox",
         on : {
           init : function(event){
-            this.open = false;
+            var id = this.id;
             this.icon = "circle";
+            this.checked = selected.some(function(n){
+              return id.indexOf(n) != -1
+            })
+            this.open = selected.some(function(n){
+              return n.indexOf(id) != -1
+            });
             /**
              var cur = this;
-             var group = this.createGroup("group");
-             var text = this.createText("a", event.node.label, {
-            color : "#aaa"
-          });
-             var removeBtn = this.createButton("b", "remove", {
-            float : "right"
-          }, function(e){
-            this.remove();
-          });
-             var addBtn = this.createButton("c", "add", {
-            float : "right"
-          }, function(e){
-            this.append({
-              label : "sub000"
-            })
-          });
+               var group = this.createGroup("group");
+               var text = this.createText("a", event.node.label, {
+              color : "#aaa"
+            });
+               var removeBtn = this.createButton("b", "remove", {
+              float : "right"
+            }, function(e){
+              this.remove();
+            });
+               var addBtn = this.createButton("c", "add", {
+              float : "right"
+            }, function(e){
+              this.append({
+                label : "sub000"
+              })
+            });
              group.appendChild(text);
              group.appendChild(removeBtn);
              group.appendChild(addBtn);
