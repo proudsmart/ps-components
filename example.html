@@ -59,39 +59,56 @@
         if(xmlhttp.readyState == 4){
           if(xmlhttp.status == 200){
             var json = JSON.parse(xmlhttp.responseText);
+
             callback(json);
           }
         };
       }
     }
-    getJSON("china.json", null, function(data){
-      var target = [];
-      each(data, function(address){
-        var addressArr = address.split(",");
-        var children = target;
-        each(addressArr, function(name, i){
-          var find = children.find(function(e){
-            return e.label == name;
-          })
-          if(find){
-            children = find.children;
-          } else {
-            var newAddress = {
-              id : addressArr.slice(0,i + 1).toString(),
-              label : name
+    function getChinaMapToTree(callback){
+      getJSON("china.json", null, getJsonSuccess)
+      function getJsonSuccess(data){
+        var target = [];
+        each(data, function(address){
+          var addressArr = address.split(",");
+          var children = target;
+          each(addressArr, function(name, i){
+            var find = children.find(function(e){
+              return e.label == name;
+            })
+            if(find){
+              children = find.children;
+            } else {
+              var newAddress = {
+                id : addressArr.slice(0,i + 1).toString(),
+                label : name
+              }
+              i !== addressArr.length - 1 && (newAddress.children = []);
+              children.push(newAddress);
+              children = newAddress.children;
             }
-            i !== addressArr.length - 1 && (newAddress.children = []);
-            children.push(newAddress);
-            children = newAddress.children;
-          }
-        })
-      });
-      var selected = ["北京,北京,东城区", "北京,北京,朝阳区"];
-      var checked = [];
-      var tree = psTree(dom, {
+          })
+        });
+        callback(target);
+      }
+    }
+    function getChinaMapToTreeSuccess(data){
+      var checked = [], tree,
+        selected = ["北京,北京,东城区", "北京,北京,朝阳区"],
+        dom = document.getElementById("ps-tree"),
+        search = document.getElementById("search"),
+        input = document.getElementById("key"),
+        hasline = document.getElementById("hasLine"),
+        hasCheckbox = document.getElementById("hasCheckbox"),
+        pullright = document.getElementById("pullright"),
+        theme = document.getElementById("theme"),
+        condense = document.getElementById("condense"),
+        animation = document.getElementById("animation"),
+        themeCache;
+      tree = psTree(dom, {
         showline : true,
         animate : false,
-        data : target,
+        data : data,
         themes : "show-line folder-pull-right show-checkbox",
         on : {
           init : function(event){
@@ -105,16 +122,16 @@
             });
             /**
              var cur = this;
-               var group = this.createGroup("group");
-               var text = this.createText("a", event.node.label, {
+             var group = this.createGroup("group");
+             var text = this.createText("a", event.node.label, {
               color : "#aaa"
             });
-               var removeBtn = this.createButton("b", "remove", {
+             var removeBtn = this.createButton("b", "remove", {
               float : "right"
             }, function(e){
               this.remove();
             });
-               var addBtn = this.createButton("c", "add", {
+             var addBtn = this.createButton("c", "add", {
               float : "right"
             }, function(e){
               this.append({
@@ -136,62 +153,53 @@
         }
       });
       tree[0].highlight();
-    })
-    var dom = document.getElementById("ps-tree");
-    var search = document.getElementById("search");
-    var input = document.getElementById("key");
-    var hasline = document.getElementById("hasLine");
-    var hasCheckbox = document.getElementById("hasCheckbox");
-    var pullright = document.getElementById("pullright");
-    var theme = document.getElementById("theme");
-    var condense = document.getElementById("condense");
-    var animation = document.getElementById("animation");
-    var themeCache;
-    hasline.setAttribute("checked", "checked");
-    pullright.setAttribute("checked", "checked");
-    hasCheckbox.setAttribute("checked", "checked");
-    themeCache = theme.value = "";
-    pullright.onchange = function(e){
-      if(this.checked == true){
-        tree.addtheme("folder-pull-right");
-      } else {
-        tree.removetheme("folder-pull-right");
+      hasline.setAttribute("checked", "checked");
+      pullright.setAttribute("checked", "checked");
+      hasCheckbox.setAttribute("checked", "checked");
+      themeCache = theme.value = "";
+      pullright.onchange = function(e){
+        if(this.checked == true){
+          tree.addtheme("folder-pull-right");
+        } else {
+          tree.removetheme("folder-pull-right");
+        }
       }
-    }
-    hasline.onchange = function(e){
-      if(this.checked == true){
-        tree.addtheme("show-line");
-      } else {
-        tree.removetheme("show-line");
+      hasline.onchange = function(e){
+        if(this.checked == true){
+          tree.addtheme("show-line");
+        } else {
+          tree.removetheme("show-line");
+        }
       }
-    }
-    hasCheckbox.onchange = function(e){
-      if(this.checked == true){
-        tree.addtheme("show-checkbox");
-      } else {
-        tree.removetheme("show-checkbox");
+      hasCheckbox.onchange = function(e){
+        if(this.checked == true){
+          tree.addtheme("show-checkbox");
+        } else {
+          tree.removetheme("show-checkbox");
+        }
       }
-    }
-    condense.onchange = function(e){
-      if(this.checked == true){
-        tree.addtheme("condense");
-      } else {
-        tree.removetheme("condense");
+      condense.onchange = function(e){
+        if(this.checked == true){
+          tree.addtheme("condense");
+        } else {
+          tree.removetheme("condense");
+        }
       }
-    }
-    search.onclick = function(e){
-      tree.search(input.value);
-    }
-    animation.onchange = function(e){
-      tree.setAnimate(this.checked);
-    }
-    theme.onchange = function(){
-      if(typeof themeCache == "string" && themeCache.length > 0){
-        tree.removetheme(themeCache);
+      search.onclick = function(e){
+        tree.search(input.value);
+      }
+      animation.onchange = function(e){
+        tree.setAnimate(this.checked);
+      }
+      theme.onchange = function(){
+        if(typeof themeCache == "string" && themeCache.length > 0){
+          tree.removetheme(themeCache);
+        };
+        tree.addtheme(this.value);
+        themeCache = this.value;
       };
-      tree.addtheme(this.value);
-      themeCache = this.value;
     };
+    getChinaMapToTree(getChinaMapToTreeSuccess);
   </script>
 </body>
 </html>
