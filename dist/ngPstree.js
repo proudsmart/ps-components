@@ -29,7 +29,7 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
       _iconFold = "fold",
       _iconUnFold = "unfold",
       _unit = ['opacity'],
-      _ver = "v1.0.30";
+      _ver = "v1.0.31";
     function isType(type){
       return function(obj){
         return tostring.call(obj) == "[object " + type + "]" && obj === obj;
@@ -701,7 +701,15 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
       removeAllChildren(this.treemenu);
     }
     function destroy(){
-
+      each(this.dom.children, bind(this, function(n, i){
+        n.remove();
+      }));
+      this.each(function(n){
+        n.destroy();
+      });
+      this.eachProp(bind(this, function(n, i){
+        delete this[i];
+      }));
     }
     function on(eventname, callback){
       if(isObject(eventname)){
@@ -814,6 +822,11 @@ if(typeof angular !== "object") { throw new Error("angularjs is a must!")};
       },
       each : function(callback){
         each(this, function(n, i){
+          callback(n, i);
+        })
+      },
+      eachProp : function(callback){
+        eachProp(this, function(n, i){
           callback(n, i);
         })
       },

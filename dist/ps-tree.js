@@ -25,7 +25,7 @@
     _iconFold = "fold",
     _iconUnFold = "unfold",
     _unit = ['opacity'],
-    _ver = "v1.0.30";
+    _ver = "v1.0.31";
   function isType(type){
     return function(obj){
       return tostring.call(obj) == "[object " + type + "]" && obj === obj;
@@ -697,7 +697,15 @@
     removeAllChildren(this.treemenu);
   }
   function destroy(){
-
+    each(this.dom.children, bind(this, function(n, i){
+      n.remove();
+    }));
+    this.each(function(n){
+      n.destroy();
+    });
+    this.eachProp(bind(this, function(n, i){
+      delete this[i];
+    }));
   }
   function on(eventname, callback){
     if(isObject(eventname)){
@@ -810,6 +818,11 @@
     },
     each : function(callback){
       each(this, function(n, i){
+        callback(n, i);
+      })
+    },
+    eachProp : function(callback){
+      eachProp(this, function(n, i){
         callback(n, i);
       })
     },

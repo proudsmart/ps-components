@@ -34,10 +34,14 @@
         <option value="steel-industry">steel industry</option>
       </select>
     </div>
+    <div style="padding : 0 0 10px 0;">
+      <span>create & destroy: </span><button id="reset">destroy</button>
+    </div>
     <div id="ps-tree" style="max-height : 600px; overflow : auto;"></div>
   </div>
   <!--  -->
   <script>
+    var mapData = [], removeTree;
     function each(arr, callback){
       var i, rs;
       arr = arr || [];
@@ -68,10 +72,9 @@
     function getChinaMapToTree(callback){
       getJSON("china.json", null, getJsonSuccess)
       function getJsonSuccess(data){
-        var target = [];
         each(data, function(address){
           var addressArr = address.split(",");
-          var children = target;
+          var children = mapData;
           each(addressArr, function(name, i){
             var find = children.find(function(e){
               return e.label == name;
@@ -89,12 +92,13 @@
             }
           })
         });
-        callback(target);
+        callback(mapData);
       }
     }
     function getChinaMapToTreeSuccess(data){
       var checked = [], tree,
         selected = ["北京,北京,东城区", "北京,北京,朝阳区"],
+        reset = document.getElementById("reset"),
         dom = document.getElementById("ps-tree"),
         search = document.getElementById("search"),
         input = document.getElementById("key"),
@@ -152,11 +156,19 @@
           }
         }
       });
-      tree[0].highlight();
       hasline.setAttribute("checked", "checked");
       pullright.setAttribute("checked", "checked");
       hasCheckbox.setAttribute("checked", "checked");
       themeCache = theme.value = "";
+      reset.onclick = function(e){
+        if(reset.innerText === "destroy"){
+          tree.destroy();
+          reset.innerText = "create";
+        } else {
+          getChinaMapToTreeSuccess(mapData);
+          reset.innerText = "destroy";
+        }
+      }
       pullright.onchange = function(e){
         if(this.checked == true){
           tree.addtheme("folder-pull-right");
@@ -198,6 +210,9 @@
         tree.addtheme(this.value);
         themeCache = this.value;
       };
+      return function(){
+        tree.destroy();
+      }
     };
     getChinaMapToTree(getChinaMapToTreeSuccess);
   </script>
