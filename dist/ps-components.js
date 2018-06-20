@@ -208,10 +208,11 @@
         routerCheck.init = function(){}
         function createMatch(match){
           return function(url){
+            match.lastIndex = 0;
             return match.exec(url)
           }
         }
-        function addRule(url, callback){
+        function addRule(url, data, callback){
           var tokens = tokenize(url);
           if(!tokens)
             return this;
@@ -221,7 +222,8 @@
               fullmatch : fullmatch,
               exec : createMatch(fullmatch),
               tokens : tokens,
-              callback : callback
+              callback : callback,
+              data : data
             }, hasSearchKey;
           console.log(fullmatch);
           function combineMatch(token){
@@ -240,14 +242,16 @@
           return this;
         }
         function check(url){
-          var tokens = url.split("/"), stableSearch, match, searchTokens, result = {}, callback;
+          var tokens = url.split("/"), stableSearch, searchObj, match, searchTokens, result = {}, callback;
           tokens[0] == "#" && tokens.shift();
           match = (function() {
             var match;
             each(tokens, function (token, i) {
               stableSearch = searchCache[token];
               for(var i = 0; i < stableSearch.length; i++){
-                if(match = stableSearch[i] && stableSearch[i].exec(url)){
+                match = stableSearch[i] && stableSearch[i].exec(url);
+                if(match){
+                  searchObj = stableSearch[i];
                   searchTokens = stableSearch[i].tokens;
                   callback = stableSearch[i].callback;
                   return true;
@@ -259,6 +263,7 @@
           match || find(regExpCache, function(regExpSearch, i){
             match = regExpSearch.exec(url) || match;
             if(match) {
+              searchObj = regExpSearch;
               searchTokens = regExpSearch.tokens;
               callback = regExpSearch.callback;
             };
@@ -271,9 +276,10 @@
           });
           callback && callback({
             match : match,
-            params : result
+            params : result,
+            data : data
           });
-          return match || null;
+          return searchObj || null;
         }
         extend(routerCheck.init.prototype, {
           addRule : addRule,
