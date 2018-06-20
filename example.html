@@ -23,8 +23,9 @@
         console.log(param);
       }
       routecheck
-        .addRule("#/prod/*/:a", handle);
-      console.log(routecheck.check("#/prod"));
+        .addRule("#/prod/:a", handle)
+        .addRule("#/prod/test/:b", handle);;
+      console.log(routecheck.check("#/prod/test/123"));
     });
   </script>
 </body>

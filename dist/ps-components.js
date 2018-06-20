@@ -62,7 +62,8 @@
     var keys = []
     function cache(key, value){
       keys.push(key);
-      cache[key] = value;
+      cache[key] = cache[key] || [];
+      cache[key].push(value);
     }
     return cache;
   }
@@ -245,10 +246,12 @@
             var match;
             each(tokens, function (token, i) {
               stableSearch = searchCache[token];
-              if(match = stableSearch && stableSearch.exec(url)){
-                searchTokens = stableSearch.tokens;
-                callback = stableSearch.callback;
-                return true;
+              for(var i = 0; i < stableSearch.length; i++){
+                if(match = stableSearch[i] && stableSearch[i].exec(url)){
+                  searchTokens = stableSearch[i].tokens;
+                  callback = stableSearch[i].callback;
+                  return true;
+                }
               }
             });
             return match;
