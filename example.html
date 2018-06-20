@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html
+    lang="en">
+<head>
+  <meta
+      charset="UTF-8">
+  <title>
+    Title</title>
+  <script src="node_modules/angular/angular.js"></script>
+  <script src="dist/ps-components.js"></script>
+</head>
+<body ng-app="myapp">
+  <div ng-controller="test">
+    asdasdasd
+    <p>{{mm}}</p>
+    <div id="a" class="c">asd</div>
+  </div>
+  <script>
+    var app = angular.module("myapp", ['psComponents']);
+    app.controller("test", function($scope, psComponents){
+      var routecheck = psComponents.routerCheck();
+      function handle(param){
+        console.log(param);
+      }
+      routecheck
+        .addRule("#/prod/*/:a", handle);
+      console.log(routecheck.check("#/prod"));
+    });
+  </script>
+</body>
+</html>
