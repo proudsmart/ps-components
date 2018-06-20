@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html
+    lang="en">
+<head>
+  <meta
+      charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" type="text/css" href="dist/css/ps-tree-basic.css" />
+  <link rel="stylesheet" type="text/css" href="dist/css/themes/ps-tree-industry.css" />
+  <script src="node_modules/angular/angular.js"></script>
+  <script src="dist/ngPstree.js"></script>
+  <style>
+    body {
+      background-color : #eee;
+    }
+  </style>
+</head>
+<body>
+  <div ng-app="myapp">
+    <div ng-controller="test">
+      select : {{select}}
+      <drop-down-tree data-option="data"
+                    ng-model="select"
+      ></drop-down-tree>
+      <div style = "height : 200px; width : 100px;"></div>
+      <drop-down-tree data-option="data"
+                      ng-model="select"
+      ></drop-down-tree>
+    </div>
+  </div>
+  <script>
+    var app = angular.module("myapp", ['ngPstree']);
+    function each(arr, callback){
+      var i, rs;
+      arr = arr || [];
+      for(i=0; i<arr.length; i++){
+        rs = typeof callback == "function" ? callback(arr[i], i) : undefined;
+        if(rs !== undefined){
+          return rs;
+        }
+      }
+    }
+    app.controller("test", function($scope, $http, $timeout){
+      $http.get("china.json").then(function(d){
+        $scope.select = "北京";
+        var target = [];
+        each(d.data, function(address){
+          var addressArr = address.split(",");
+          var children = target;
+          each(addressArr, function(name, i){
+            var find = children.find(function(e){
+              return e.label == name;
+            })
+            if(find){
+              children = find.children;
+            } else {
+              var newAddress = {
+                label : name
+              }
+              i !== addressArr.length - 1 && (newAddress.children = []);
+              children.push(newAddress);
+              children = newAddress.children;
+            }
+          })
+        });
+        $scope.data = target;
+      });
+    });
+  </script>
+</body>
+</html>
