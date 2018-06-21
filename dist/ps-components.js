@@ -247,7 +247,7 @@
           match = (function() {
             var match;
             each(tokens, function (token, i) {
-              stableSearch = searchCache[token];
+              stableSearch = searchCache[token] || [];
               for(var i = 0; i < stableSearch.length; i++){
                 match = stableSearch[i] && stableSearch[i].exec(url);
                 if(match){
