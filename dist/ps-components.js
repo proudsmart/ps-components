@@ -200,7 +200,9 @@
             }
           }
           tokens[0] == "#" && tokens.shift();
-          return tokens.map(setToken);
+          return tokens.map(setToken).filter(function(e){
+            return e;
+          });
         }
         function routerCheck(){
           return new routerCheck.init();

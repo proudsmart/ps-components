@@ -23,7 +23,7 @@
         console.log(param);
       }
       routecheck
-        .addRule("#/prod/:a", {a : 1})
+        .addRule("#/prod/[{a:'asd'}]", {a : 1})
         .addRule("#/prod/test/:b", {b : 1});
       console.log(routecheck.check("#/prod/test/123"));
     });
