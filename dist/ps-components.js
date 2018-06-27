@@ -8,6 +8,7 @@
   }
 })(this, function(){
   var isArray = isType("Array"),
+    isFunction = isType("Function"),
     splice = Array.prototype.splice;
   function isType(type){
     return function(obj){
@@ -22,6 +23,11 @@
       a[i] = b[i]
     }
     return a;
+  }
+  function bind(obj, fn){
+    return function(){
+      return fn.apply(obj, arguments);
+    }
   }
   function each(arr, callback){
     var i = 0;
@@ -74,6 +80,7 @@
   }
   angular.module("psComponents", [])
     .factory("psComponents", ["$q", function($q){
+      var CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
       var psComponents = {}, cssStyle = {}, insertStyle, routerCheck,
         head = document.getElementsByTagName("head")[0];
       function addCssFile(url) {
@@ -129,6 +136,84 @@
         }
         insertStyle.innerHTML = str;
       }
+      websocket = (function(){
+        var ws, events = {};
+        function uuid(len, radix) {
+          var chars = CHARS,
+            uuid = [],
+            i;
+          radix = radix || chars.length;
+          if(len) {
+            for(i = 0; i < len; i++) uuid[i] = chars[0 | Math.random() * radix];
+          } else {
+            var r;
+            uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+            uuid[14] = '4';
+            for(i = 0; i < 36; i++) {
+              if(!uuid[i]) {
+                r = 0 | Math.random() * 16;
+                uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+              }
+            }
+          }
+          return uuid.join('');
+        };
+        function websocket(url){
+          return new websocket.init(url);
+        };
+        function callAll(callbacks, data){
+          for(var i in callbacks){
+            callbacks[i](data);
+          }
+        }
+        function stringify(obj){
+          return JSON.stringify(obj);
+        }
+        websocket.init = function(url){
+          ws = new WebSocket(url);
+          ws.onopen = bind(this, function(event){
+            callAll(events['open'],event);
+          })
+          ws.onerror = bind(this, function(event){
+            callAll(events['open'],event);
+          })
+          ws.onclose = bind(this, function(event){
+            callAll(events['open'],event);
+          })
+          ws.onmessage = bind(this, function(event){
+            callAll(events['open'],event.data);
+          })
+        }
+        function on(eventname, handler){
+          events[eventname] = events[eventname] || [];
+          events[eventname].push(handler);
+        }
+        function off(eventname, handler){
+          delete events[eventname];
+        }
+        function send(param){
+          if(ws.readyState !== 1){
+            throw new Error("未链接成功，请在on(open, callback)方法后调用");
+          }
+          var message = {}, uid = uuid();
+          message.operation = "register";
+          message.uuid = uid;
+          message.type = "kpi";
+          message.param = param;
+          ws.send(stringify(message));
+          return function removeSocket(){
+            message = {};
+            message.operation = "unRegister";
+            message.uuid = uid;
+            ws.send(stringify(message));
+          }
+        }
+        extend(websocket.init.prototype, {
+          send : send,
+          on : on
+        });
+        return websocket;
+      })()
       routerCheck = (function(){
         var word = "[a-zA-Z0-9-_]",
           searchCache = createCache(),
@@ -227,7 +312,6 @@
               callback : callback,
               data : data
             }, hasSearchKey;
-          console.log(fullmatch);
           function combineMatch(token){
             return token.strict === false ?
               "(?:\\/(" + token.match + ")|)" : "\\/(" + token.match + ")";
@@ -290,6 +374,7 @@
         return routerCheck;
       })();
       return extend(psComponents, {
+        websocket : websocket,
         addCssFiles : addCssFiles,
         addCssStyle : addCssStyle,
         routerCheck : routerCheck

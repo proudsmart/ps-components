@@ -26,6 +26,17 @@
         .addRule("#/prod/[{a:'asd'}]", {a : 1})
         .addRule("#/prod/test/:b", {b : 1});
       console.log(routecheck.check("#/prod/test/123"));
+
+      var websocket = psComponents.websocket("wss://demo.proudsmart.com/websocket/message");
+      websocket.on("open", function(d){
+        websocket.send({
+          nodeIds : "123",
+          kpiIds : "999999,222"
+        });
+      })
+      websocket.on("data", function(d){
+        console.log(d)
+      });
     });
   </script>
 </body>
